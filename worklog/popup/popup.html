@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Worklog Pomodoro</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h1>Worklog Pomodoro</h1>
+
+    <div id="idle" hidden>
+      <label for="minutes">Work duration (minutes)</label>
+      <input id="minutes" type="number" min="1" max="480" step="1" value="25" />
+      <button id="start">Start</button>
+      <p id="file-status" class="muted"></p>
+      <a id="options-link" href="#">Worklog file settings</a>
+    </div>
+
+    <div id="running" hidden>
+      <p>Time remaining</p>
+      <p id="remaining" class="big">--:--</p>
+      <button id="cancel" class="secondary">Cancel</button>
+    </div>
+
+    <div id="awaiting" hidden>
+      <p>Timer finished. Open the worklog tab to acknowledge.</p>
+      <button id="open-locked">Open worklog</button>
+    </div>
+
+    <p id="error" class="error" hidden></p>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

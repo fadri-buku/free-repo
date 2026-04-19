@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Worklog \u2014 time's up</title>
+    <link rel="stylesheet" href="locked.css" />
+  </head>
+  <body>
+    <div class="curtain">
+      <div class="card">
+        <h1>Time's up</h1>
+        <p class="subtitle">What did you work on? Paste links, notes, anything.</p>
+
+        <textarea id="entry" rows="10" placeholder="e.g. Reviewed PR #42, drafted design doc, https://..."></textarea>
+
+        <p id="file-info" class="muted"></p>
+        <p id="error" class="error" hidden></p>
+
+        <div class="actions">
+          <button id="mute" class="ghost" title="Stop alarm sound">Mute alarm</button>
+          <button id="save">Save and acknowledge</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="locked.js"></script>
+  </body>
+</html>
