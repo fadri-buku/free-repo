@@ -28,6 +28,7 @@
         <button id="start" class="primary">Start</button>
       </div>
 
+      <p id="cycle-status" class="muted"></p>
       <p id="file-status" class="muted"></p>
       <div class="links">
         <a id="view-link" href="#">View worklog</a>
@@ -36,9 +37,14 @@
     </section>
 
     <section id="running" hidden>
-      <p id="running-title" class="session-title"></p>
+      <div class="session-header">
+        <div id="cycle-dots" class="cycle-dots" aria-label="Completed sessions"></div>
+        <p id="phase-label" class="phase-label"></p>
+      </div>
+      <p id="running-title" class="session-title" hidden></p>
+
       <div class="ring-wrap">
-        <svg class="ring" viewBox="0 0 120 120" width="160" height="160" aria-hidden="true">
+        <svg id="ring-svg" class="ring" viewBox="0 0 120 120" width="150" height="150" aria-hidden="true">
           <circle class="ring-track" cx="60" cy="60" r="54" fill="none" stroke-width="8" />
           <circle id="ring-progress" class="ring-progress" cx="60" cy="60" r="54"
             fill="none" stroke-width="8" stroke-linecap="round"
@@ -46,10 +52,14 @@
         </svg>
         <div class="ring-label">
           <p id="remaining" class="big">--:--</p>
-          <p id="running-total" class="muted-inline">of --</p>
+          <p id="running-total" class="muted-inline"></p>
         </div>
       </div>
-      <button id="cancel" class="secondary">Cancel</button>
+
+      <div class="btn-row">
+        <button id="pause-resume" class="secondary">Pause</button>
+        <button id="cancel-skip" class="secondary">Cancel</button>
+      </div>
     </section>
 
     <section id="awaiting" hidden>
