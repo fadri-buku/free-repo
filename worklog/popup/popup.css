@@ -26,9 +26,8 @@ header {
 .logo {
   width: 20px;
   height: 20px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 3px rgba(210, 80, 60, 0.25);
+  flex-shrink: 0;
+  display: block;
 }
 
 h1 { font-size: 15px; font-weight: 600; margin: 0; }

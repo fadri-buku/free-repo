@@ -52,11 +52,10 @@ main {
 }
 
 .logo {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 4px rgba(210, 80, 60, 0.2);
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: block;
 }
 
 h1 {
