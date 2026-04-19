@@ -1,99 +1,90 @@
-import {
-  getEntries,
-  parseWorklogText,
-  mergeImport,
-  entryToMarkdown
-} from "../lib/entries-store.js";
+import { loadFileHandle } from "../lib/file-handle-store.js";
 
 const $ = (id) => document.getElementById(id);
 
+let handle = null;
+let rawText = "";
 let allEntries = [];
 
-function formatDate(iso) {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso || "Unknown date";
+// Auto-refresh when the locked page broadcasts a save.
+const channel = new BroadcastChannel("worklog");
+channel.addEventListener("message", (e) => {
+  if (e.data?.type === "saved") readAndRender();
+});
+
+// ── Parser ────────────────────────────────────────────────────────────────
+
+function parseEntries(raw) {
+  const entries = [];
+  const re = /^## (.+?)(?:\s+\((\d+m)\))?(?:\s+—\s+(.+))?\s*$/gm;
+  let m;
+  while ((m = re.exec(raw)) !== null) {
+    const bodyStart = m.index + m[0].length + 1;
+    const nextIdx = raw.indexOf("\n## ", bodyStart);
+    const body = raw.slice(bodyStart, nextIdx === -1 ? raw.length : nextIdx).trim();
+    const d = new Date(m[1].trim());
+    entries.push({
+      timestamp: m[1].trim(),
+      date: isNaN(d.getTime()) ? null : d,
+      minutes: m[2] ? parseInt(m[2], 10) : null,
+      title: m[3]?.trim() || "",
+      body
+    });
+    re.lastIndex = m.index + m[0].length;
+  }
+  return entries.sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+function formatDate(d) {
+  if (!d) return "Unknown date";
   return d.toLocaleDateString(undefined, {
     weekday: "short", year: "numeric", month: "short", day: "numeric"
   }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
-function escapeHtml(s) {
+function esc(s) {
   return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function escapeRe(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function highlight(text, query) {
-  const safe = escapeHtml(text);
-  if (!query) return safe;
-  const re = new RegExp(`(${escapeRe(escapeHtml(query))})`, "gi");
+function highlight(text, q) {
+  const safe = esc(text);
+  if (!q) return safe;
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
   return safe.replace(re, "<mark>$1</mark>");
 }
 
-function sortNewestFirst(list) {
-  return [...list].sort((a, b) => {
-    const da = new Date(a.timestamp).getTime() || 0;
-    const db = new Date(b.timestamp).getTime() || 0;
-    return db - da;
-  });
-}
+// ── Render ────────────────────────────────────────────────────────────────
 
-function setState(id) {
-  for (const s of ["empty", "no-match"]) {
-    $(`state-${s}`).hidden = s !== id;
-  }
-}
-
-function setStatus(msg, kind) {
-  const el = $("status");
-  if (!msg) { el.hidden = true; el.textContent = ""; el.classList.remove("error"); return; }
-  el.hidden = false;
-  el.textContent = msg;
-  el.classList.toggle("error", kind === "error");
-}
-
-function render(query = "") {
-  const q = query.trim().toLowerCase();
+function renderEntries(query = "") {
+  const q = esc(query.trim().toLowerCase());
   const list = $("entries");
   list.innerHTML = "";
 
-  if (allEntries.length === 0) {
-    setState("empty");
-    $("count").textContent = "";
-    return;
-  }
-
   const filtered = q
     ? allEntries.filter(e =>
-        (e.body || "").toLowerCase().includes(q) ||
-        (e.title || "").toLowerCase().includes(q) ||
-        formatDate(e.timestamp).toLowerCase().includes(q) ||
-        (e.minutes ? `${e.minutes}m` : "").toLowerCase().includes(q)
+        (e.body + e.title + formatDate(e.date) + (e.minutes ? `${e.minutes}m` : ""))
+          .toLowerCase().includes(query.trim().toLowerCase())
       )
     : allEntries;
 
-  if (filtered.length === 0) {
-    setState("no-match");
-    $("count").textContent = `0 of ${allEntries.length} entries`;
-    return;
-  }
+  $("state-empty").hidden   = allEntries.length > 0;
+  $("state-no-match").hidden = !(allEntries.length > 0 && filtered.length === 0);
 
-  setState(null);
   $("count").textContent = q
     ? `${filtered.length} of ${allEntries.length} entries`
     : `${allEntries.length} entr${allEntries.length === 1 ? "y" : "ies"}`;
 
   for (const e of filtered) {
-    const idx = allEntries.indexOf(e);
+    const n = allEntries.length - allEntries.indexOf(e);
     const li = document.createElement("li");
     li.className = "entry";
     li.innerHTML = `
       <div class="entry-meta">
-        <span class="entry-date">${formatDate(e.timestamp)}</span>
+        <span class="entry-date">${formatDate(e.date)}</span>
         ${e.minutes ? `<span class="entry-duration">${e.minutes}m</span>` : ""}
-        <span class="entry-number">#${allEntries.length - idx}</span>
+        <span class="entry-number">#${n}</span>
       </div>
       ${e.title ? `<div class="entry-title">${highlight(e.title, q)}</div>` : ""}
       <div class="entry-body">${highlight(e.body, q)}</div>`;
@@ -101,69 +92,87 @@ function render(query = "") {
   }
 }
 
-async function load() {
-  const entries = await getEntries();
-  allEntries = sortNewestFirst(entries);
-  render($("search").value);
-  $("subtitle").textContent = allEntries.length
-    ? `${allEntries.length} entr${allEntries.length === 1 ? "y" : "ies"} stored in the extension`
-    : "Stored in the extension";
-}
+// ── File I/O ──────────────────────────────────────────────────────────────
 
-async function importFromFile() {
-  setStatus(null);
-  if (!window.showOpenFilePicker) {
-    setStatus("Your browser doesn't support the file picker.", "error");
+async function readAndRender() {
+  try {
+    const file = await handle.getFile();
+    rawText = await file.text();
+  } catch (err) {
+    console.warn("Could not re-read file:", err);
     return;
   }
-  try {
-    const [handle] = await window.showOpenFilePicker({
-      multiple: false,
-      types: [
-        { description: "Worklog", accept: { "text/plain": [".md", ".txt", ".log"] } }
-      ]
-    });
-    const file = await handle.getFile();
-    const text = await file.text();
-    const parsed = parseWorklogText(text);
-    if (parsed.length === 0) {
-      setStatus("No worklog-style entries found in that file.", "error");
-      return;
-    }
-    const { added, total } = await mergeImport(parsed);
-    await load();
-    setStatus(
-      added === 0
-        ? `No new entries — all ${parsed.length} already stored.`
-        : `Imported ${added} new entr${added === 1 ? "y" : "ies"}. Total: ${total}.`
-    );
-  } catch (err) {
-    if (err?.name !== "AbortError") setStatus(String(err?.message || err), "error");
-  }
+  allEntries = parseEntries(rawText);
+  renderEntries($("search").value);
 }
 
-function exportAsMarkdown() {
-  const md = sortNewestFirst(allEntries)
-    .slice().reverse()  // oldest first on export
-    .map(entryToMarkdown)
-    .join("\n");
-  const blob = new Blob([md || "# Worklog\n\n(no entries)\n"], { type: "text/markdown" });
+// ── Main flow ─────────────────────────────────────────────────────────────
+
+async function init() {
+  handle = await loadFileHandle().catch(() => null);
+
+  if (!handle) {
+    $("no-file").hidden = false;
+    return;
+  }
+
+  $("file-name").textContent = handle.name;
+  $("gate-file").textContent = handle.name;
+
+  // Try to read without asking — succeeds when permission is already held.
+  const perm = await handle.queryPermission({ mode: "readonly" }).catch(() => "denied");
+  if (perm === "granted") {
+    await readAndRender();
+    $("view").hidden = false;
+    return;
+  }
+
+  // Permission not yet granted — show the gate screen.
+  // A real user click is required before requestPermission can be called.
+  $("gate").hidden = false;
+}
+
+// ── Gate screen ───────────────────────────────────────────────────────────
+
+$("grant-btn").addEventListener("click", async () => {
+  $("gate-error").hidden = true;
+  let granted;
+  try {
+    granted = await handle.requestPermission({ mode: "readonly" });
+  } catch (err) {
+    $("gate-error").textContent = `Could not request permission: ${err?.message || err}`;
+    $("gate-error").hidden = false;
+    return;
+  }
+  if (granted !== "granted") {
+    $("gate-error").textContent = "Access was denied. Please try again or re-select the file in Settings.";
+    $("gate-error").hidden = false;
+    return;
+  }
+  await readAndRender();
+  $("gate").hidden = true;
+  $("view").hidden = false;
+});
+
+// ── In-view controls ──────────────────────────────────────────────────────
+
+$("search").addEventListener("input", (e) => renderEntries(e.target.value));
+
+$("refresh").addEventListener("click", readAndRender);
+
+$("export").addEventListener("click", () => {
+  if (!rawText) return;
+  const blob = new Blob([rawText], { type: "text/markdown" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `worklog-${new Date().toISOString().slice(0, 10)}.md`;
+  a.download = handle?.name || "worklog.md";
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-$("search").addEventListener("input", (e) => render(e.target.value));
-$("import").addEventListener("click", importFromFile);
-$("export").addEventListener("click", exportAsMarkdown);
-$("open-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
-
-// Reload if entries change in another context (e.g. after a save on locked page).
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.worklogEntries) load();
 });
 
-load();
+$("open-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+$("gate-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+$("go-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+
+init();

@@ -3,7 +3,6 @@ import {
   ensurePermission,
   appendToFile
 } from "../lib/file-handle-store.js";
-import { appendEntry, entryToMarkdown } from "../lib/entries-store.js";
 
 const $ = (id) => document.getElementById(id);
 const audio = $("alarm-audio");
@@ -11,6 +10,9 @@ const indicator = $("alarm-indicator");
 
 let fallbackCtx = null;
 let fallbackTimer = null;
+
+// BroadcastChannel lets an open viewer tab refresh automatically after a save.
+const channel = new BroadcastChannel("worklog");
 
 async function playAudio() {
   try {
@@ -28,7 +30,6 @@ function startFallbackBeep() {
   } catch {
     return;
   }
-  // Soft triad chime (C5, E5, G5) as a loop. Each tick plays the full arpeggio.
   const chime = () => {
     if (!fallbackCtx) return;
     const now = fallbackCtx.currentTime;
@@ -90,11 +91,8 @@ async function init() {
   flashTitle();
   await startAlarm();
 
-  // If autoplay was blocked, resume on first user interaction.
   document.addEventListener("click", async function onClick() {
-    if (audio.paused && !fallbackTimer) {
-      await startAlarm();
-    }
+    if (audio.paused && !fallbackTimer) await startAlarm();
     document.removeEventListener("click", onClick);
   }, { once: true });
 
@@ -108,8 +106,8 @@ async function init() {
 
   const handle = await loadFileHandle().catch(() => null);
   $("file-info").textContent = handle
-    ? `Will also append to: ${handle.name}`
-    : "No worklog file configured — your entry will be saved in the extension only.";
+    ? `Will append to: ${handle.name}`
+    : "No worklog file set \u2014 open Settings to configure one. Your entry won't be saved to a file until you do.";
 }
 
 $("volume").addEventListener("input", (e) => {
@@ -130,30 +128,32 @@ $("save").addEventListener("click", async () => {
     return;
   }
 
-  const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-  const entry = {
-    timestamp: new Date().toISOString(),
-    minutes: state?.minutes || null,
-    title: state?.title || "",
-    body: text
-  };
-
-  // Primary: always save to extension storage — never requires a permission prompt.
-  try {
-    await appendEntry(entry);
-  } catch (err) {
-    showError(`Could not save entry: ${err?.message || err}`);
+  const handle = await loadFileHandle().catch(() => null);
+  if (!handle) {
+    showError("No worklog file configured. Open Settings to pick one first.");
     return;
   }
 
-  // Best-effort: also append to the user's worklog file if one is configured.
-  const handle = await loadFileHandle().catch(() => null);
-  if (handle) {
-    const ok = await ensurePermission(handle, "readwrite").catch(() => false);
-    if (ok) {
-      try { await appendToFile(handle, entryToMarkdown(entry)); } catch {}
-    }
+  const ok = await ensurePermission(handle, "readwrite").catch(() => false);
+  if (!ok) {
+    showError("Write permission was denied. Try again or re-select the file in Settings.");
+    return;
   }
+
+  const state = await chrome.runtime.sendMessage({ type: "GET_STATE" }).catch(() => null);
+  const when = new Date().toISOString();
+  const duration = state?.minutes ? ` (${state.minutes}m)` : "";
+  const titlePart = state?.title ? ` \u2014 ${state.title}` : "";
+  const entry = `## ${when}${duration}${titlePart}\n${text}\n`;
+
+  try {
+    await appendToFile(handle, entry);
+  } catch (err) {
+    showError(`Failed to write file: ${err?.message || err}`);
+    return;
+  }
+
+  channel.postMessage({ type: "saved" });
 
   stopAlarm();
   await chrome.runtime.sendMessage({ type: "ACKNOWLEDGED" });
