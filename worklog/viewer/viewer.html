@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Worklog — entries</title>
+    <link rel="stylesheet" href="viewer.css" />
+  </head>
+  <body>
+    <header>
+      <div class="logo" aria-hidden="true"></div>
+      <div class="header-text">
+        <h1>Worklog</h1>
+        <p id="file-name" class="file-name"></p>
+      </div>
+      <div class="header-actions">
+        <button id="refresh" class="icon-btn" title="Reload from file">↻</button>
+        <button id="open-settings" class="ghost">Settings</button>
+      </div>
+    </header>
+
+    <div id="toolbar" hidden>
+      <input id="search" type="search" placeholder="Search entries…" />
+      <p id="count" class="count"></p>
+    </div>
+
+    <div id="state-empty" class="state" hidden>
+      <p>No worklog file configured.</p>
+      <button id="go-settings">Open settings to pick a file</button>
+    </div>
+
+    <div id="state-no-entries" class="state" hidden>
+      <p>No entries yet — complete a timer session to add one.</p>
+    </div>
+
+    <div id="state-no-match" class="state" hidden>
+      <p>No entries match your search.</p>
+    </div>
+
+    <div id="state-error" class="state error-state" hidden>
+      <p id="error-msg"></p>
+      <button id="retry">Retry</button>
+    </div>
+
+    <ol id="entries" class="entries" reversed></ol>
+
+    <script type="module" src="viewer.js"></script>
+  </body>
+</html>

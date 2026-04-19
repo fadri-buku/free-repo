@@ -173,6 +173,12 @@ button.secondary:hover {
 
 #open-locked { width: 100%; }
 
+.links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
 a {
   font-size: 12px;
   color: var(--accent);

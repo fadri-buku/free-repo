@@ -126,6 +126,13 @@ $("open-locked").addEventListener("click", async () => {
   window.close();
 });
 
+$("view-link").addEventListener("click", (e) => {
+  e.preventDefault();
+  const url = chrome.runtime.getURL("viewer/viewer.html");
+  chrome.tabs.create({ url });
+  window.close();
+});
+
 $("options-link").addEventListener("click", (e) => {
   e.preventDefault();
   chrome.runtime.openOptionsPage();
