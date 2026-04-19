@@ -102,10 +102,21 @@ worklog/
   provided. If autoplay is blocked or the WAV fails to load, the page
   falls back to a Web Audio version of the same chime so there's always
   *some* audible alarm.
-- **File writes.** The worklog file is persisted as a `FileSystemFileHandle`
-  in IndexedDB. On save, the extension re-checks `readwrite` permission
-  (Chrome may require a one-click re-grant after browser restart), reads the
-  existing contents, and writes `existing + newEntry` back to the same handle.
+- **Entry storage.** Every acknowledged entry is primarily stored in
+  `chrome.storage.local` under `worklogEntries` (an array of
+  `{ timestamp, minutes, title, body }`). This is what the viewer reads,
+  so opening the viewer never prompts for file permission.
+- **File writes.** If a worklog file is configured, the locked page also
+  appends the same entry to it as Markdown (`## ISO (Nm) — Title\nbody`) on
+  a best-effort basis. The handle is persisted as a `FileSystemFileHandle`
+  in IndexedDB; if permission is denied or the write fails, the entry is
+  still kept in `chrome.storage.local`.
+- **Viewer.** `worklog/viewer/` reads `chrome.storage.local` directly —
+  no file permission, no setup. It supports live search, an **Import**
+  button that reads an existing worklog `.md`/`.txt` file via the File
+  System Access API and merges unseen entries into storage, and an
+  **Export** button that downloads all stored entries as a Markdown file
+  via a `Blob` + `<a download>`.
 
 ## Permissions
 

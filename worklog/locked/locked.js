@@ -3,6 +3,7 @@ import {
   ensurePermission,
   appendToFile
 } from "../lib/file-handle-store.js";
+import { appendEntry, entryToMarkdown } from "../lib/entries-store.js";
 
 const $ = (id) => document.getElementById(id);
 const audio = $("alarm-audio");
@@ -107,8 +108,8 @@ async function init() {
 
   const handle = await loadFileHandle().catch(() => null);
   $("file-info").textContent = handle
-    ? `Will append to: ${handle.name}`
-    : "No worklog file set. Open settings to pick one \u2014 your entry won't save until you do.";
+    ? `Will also append to: ${handle.name}`
+    : "No worklog file configured — your entry will be saved in the extension only.";
 }
 
 $("volume").addEventListener("input", (e) => {
@@ -128,29 +129,30 @@ $("save").addEventListener("click", async () => {
     showError("Write something before saving.");
     return;
   }
-  const handle = await loadFileHandle().catch(() => null);
-  if (!handle) {
-    showError("No worklog file configured. Open the extension options to pick one.");
-    return;
-  }
-  const ok = await ensurePermission(handle, "readwrite").catch(() => false);
-  if (!ok) {
-    showError("Permission to write the worklog file was denied.");
-    return;
-  }
 
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-  const when = new Date().toISOString();
-  const duration = state?.minutes ? `(${state.minutes}m)` : "";
-  const titlePart = state?.title ? ` — ${state.title}` : "";
-  const header = `## ${when}${duration ? ` ${duration}` : ""}${titlePart}`;
-  const entry = `${header}\n${text}\n`;
+  const entry = {
+    timestamp: new Date().toISOString(),
+    minutes: state?.minutes || null,
+    title: state?.title || "",
+    body: text
+  };
 
+  // Primary: always save to extension storage — never requires a permission prompt.
   try {
-    await appendToFile(handle, entry);
+    await appendEntry(entry);
   } catch (err) {
-    showError(`Failed to write file: ${err?.message || err}`);
+    showError(`Could not save entry: ${err?.message || err}`);
     return;
+  }
+
+  // Best-effort: also append to the user's worklog file if one is configured.
+  const handle = await loadFileHandle().catch(() => null);
+  if (handle) {
+    const ok = await ensurePermission(handle, "readwrite").catch(() => false);
+    if (ok) {
+      try { await appendToFile(handle, entryToMarkdown(entry)); } catch {}
+    }
   }
 
   stopAlarm();

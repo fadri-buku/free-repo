@@ -30,6 +30,9 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Global: the hidden attribute must win over our flex/block rules. */
+[hidden] { display: none !important; }
+
 body {
   background: var(--bg);
   color: var(--fg);
@@ -65,7 +68,7 @@ h1 {
   line-height: 1.1;
 }
 
-.file-name {
+.subtitle {
   font-size: 11px;
   color: var(--meta);
   white-space: nowrap;
@@ -120,14 +123,29 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
 }
 
-.error-state { color: var(--accent); }
+.state-hint {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.status {
+  padding: 8px 20px;
+  margin: 10px 20px 0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+}
+
+.status.error { color: var(--accent); border-color: rgba(210, 80, 60, 0.4); }
 
 .entries {
   list-style: none;
-  padding: 16px 20px;
+  padding: 16px 20px 32px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -143,29 +161,27 @@ h1 {
 .entry-meta {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 6px;
   flex-wrap: wrap;
 }
 
 .entry-date {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--fg);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--meta);
 }
 
 .entry-duration {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--meta);
   background: var(--field-bg);
   padding: 2px 8px;
   border-radius: 10px;
-  margin-left: 8px;
 }
 
 .entry-number {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--meta);
   margin-left: auto;
 }
@@ -194,8 +210,8 @@ mark {
 
 button {
   font: inherit;
-  font-size: 14px;
-  padding: 8px 14px;
+  font-size: 13px;
+  padding: 6px 12px;
   border-radius: 6px;
   border: 0;
   background: var(--accent);
@@ -210,19 +226,6 @@ button.ghost {
   background: transparent;
   border: 1px solid var(--field-border);
   color: var(--fg);
-  font-size: 13px;
-  padding: 6px 12px;
 }
 
 button.ghost:hover { background: var(--field-bg); }
-
-.icon-btn {
-  background: transparent;
-  border: 1px solid var(--field-border);
-  color: var(--fg);
-  font-size: 16px;
-  padding: 5px 9px;
-  line-height: 1;
-}
-
-.icon-btn:hover { background: var(--field-bg); }

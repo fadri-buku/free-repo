@@ -1,159 +1,169 @@
-import { loadFileHandle, ensurePermission } from "../lib/file-handle-store.js";
+import {
+  getEntries,
+  parseWorklogText,
+  mergeImport,
+  entryToMarkdown
+} from "../lib/entries-store.js";
 
 const $ = (id) => document.getElementById(id);
 
 let allEntries = [];
-let currentHandle = null;
 
-// ── parser ────────────────────────────────────────────────────────────────────
-
-function parseEntries(raw) {
-  const entries = [];
-  // Header format: "## ISO_TIMESTAMP (Nm) — Title" (duration and title optional)
-  const sectionRe = /^## (.+?)(?:\s+\((\d+m)\))?(?:\s+—\s+(.+))?\s*$/gm;
-  let match;
-  while ((match = sectionRe.exec(raw)) !== null) {
-    const bodyStart = match.index + match[0].length + 1;
-    const nextHeaderIdx = raw.indexOf("\n## ", bodyStart);
-    const bodyEnd = nextHeaderIdx === -1 ? raw.length : nextHeaderIdx;
-    const body = raw.slice(bodyStart, bodyEnd).trim();
-    entries.push({
-      rawDate: match[1].trim(),
-      duration: match[2] || null,
-      title: match[3] ? match[3].trim() : null,
-      body,
-      date: parseDate(match[1].trim())
-    });
-    sectionRe.lastIndex = match.index + match[0].length;
-  }
-  entries.sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
-  return entries;
-}
-
-function parseDate(s) {
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function formatDate(date) {
-  if (!date) return "Unknown date";
-  return date.toLocaleDateString(undefined, {
+function formatDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso || "Unknown date";
+  return d.toLocaleDateString(undefined, {
     weekday: "short", year: "numeric", month: "short", day: "numeric"
-  }) + " " + date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-}
-
-// ── highlight ─────────────────────────────────────────────────────────────────
-
-function highlight(text, query) {
-  if (!query) return escapeHtml(text);
-  const escaped = escapeHtml(text);
-  const re = new RegExp(`(${escapeRe(escapeHtml(query))})`, "gi");
-  return escaped.replace(re, "<mark>$1</mark>");
+  }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
 function escapeHtml(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function escapeRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// ── render ────────────────────────────────────────────────────────────────────
+function highlight(text, query) {
+  const safe = escapeHtml(text);
+  if (!query) return safe;
+  const re = new RegExp(`(${escapeRe(escapeHtml(query))})`, "gi");
+  return safe.replace(re, "<mark>$1</mark>");
+}
+
+function sortNewestFirst(list) {
+  return [...list].sort((a, b) => {
+    const da = new Date(a.timestamp).getTime() || 0;
+    const db = new Date(b.timestamp).getTime() || 0;
+    return db - da;
+  });
+}
+
+function setState(id) {
+  for (const s of ["empty", "no-match"]) {
+    $(`state-${s}`).hidden = s !== id;
+  }
+}
+
+function setStatus(msg, kind) {
+  const el = $("status");
+  if (!msg) { el.hidden = true; el.textContent = ""; el.classList.remove("error"); return; }
+  el.hidden = false;
+  el.textContent = msg;
+  el.classList.toggle("error", kind === "error");
+}
 
 function render(query = "") {
   const q = query.trim().toLowerCase();
   const list = $("entries");
   list.innerHTML = "";
 
+  if (allEntries.length === 0) {
+    setState("empty");
+    $("count").textContent = "";
+    return;
+  }
+
   const filtered = q
     ? allEntries.filter(e =>
-        e.body.toLowerCase().includes(q) ||
-        formatDate(e.date).toLowerCase().includes(q) ||
-        (e.duration || "").toLowerCase().includes(q)
+        (e.body || "").toLowerCase().includes(q) ||
+        (e.title || "").toLowerCase().includes(q) ||
+        formatDate(e.timestamp).toLowerCase().includes(q) ||
+        (e.minutes ? `${e.minutes}m` : "").toLowerCase().includes(q)
       )
     : allEntries;
 
-  const toolbar = $("toolbar");
-  toolbar.hidden = allEntries.length === 0;
+  if (filtered.length === 0) {
+    setState("no-match");
+    $("count").textContent = `0 of ${allEntries.length} entries`;
+    return;
+  }
 
-  setState(
-    allEntries.length === 0 ? "no-entries" :
-    filtered.length === 0 ? "no-match" :
-    null
-  );
+  setState(null);
+  $("count").textContent = q
+    ? `${filtered.length} of ${allEntries.length} entries`
+    : `${allEntries.length} entr${allEntries.length === 1 ? "y" : "ies"}`;
 
-  if (filtered.length > 0) {
-    $("count").textContent = q
-      ? `${filtered.length} of ${allEntries.length} entries`
-      : `${allEntries.length} entr${allEntries.length === 1 ? "y" : "ies"}`;
-
-    for (let i = 0; i < filtered.length; i++) {
-      const e = filtered[i];
-      const li = document.createElement("li");
-      li.className = "entry";
-      li.innerHTML = `
-        <div class="entry-meta">
-          <span class="entry-date">${formatDate(e.date)}</span>
-          ${e.duration ? `<span class="entry-duration">${e.duration}</span>` : ""}
-          <span class="entry-number">#${allEntries.length - allEntries.indexOf(e)}</span>
-        </div>
-        ${e.title ? `<div class="entry-title">${highlight(e.title, q)}</div>` : ""}
-        <div class="entry-body">${highlight(e.body, q)}</div>`;
-      list.appendChild(li);
-    }
+  for (const e of filtered) {
+    const idx = allEntries.indexOf(e);
+    const li = document.createElement("li");
+    li.className = "entry";
+    li.innerHTML = `
+      <div class="entry-meta">
+        <span class="entry-date">${formatDate(e.timestamp)}</span>
+        ${e.minutes ? `<span class="entry-duration">${e.minutes}m</span>` : ""}
+        <span class="entry-number">#${allEntries.length - idx}</span>
+      </div>
+      ${e.title ? `<div class="entry-title">${highlight(e.title, q)}</div>` : ""}
+      <div class="entry-body">${highlight(e.body, q)}</div>`;
+    list.appendChild(li);
   }
 }
-
-function setState(id) {
-  for (const s of ["empty", "no-entries", "no-match", "error"]) {
-    $(`state-${s}`).hidden = s !== id;
-  }
-}
-
-// ── load ──────────────────────────────────────────────────────────────────────
 
 async function load() {
-  setState(null);
-  $("toolbar").hidden = true;
-  $("entries").innerHTML = "";
-  $("file-name").textContent = "";
+  const entries = await getEntries();
+  allEntries = sortNewestFirst(entries);
+  render($("search").value);
+  $("subtitle").textContent = allEntries.length
+    ? `${allEntries.length} entr${allEntries.length === 1 ? "y" : "ies"} stored in the extension`
+    : "Stored in the extension";
+}
 
-  const handle = await loadFileHandle().catch(() => null);
-  if (!handle) {
-    setState("empty");
+async function importFromFile() {
+  setStatus(null);
+  if (!window.showOpenFilePicker) {
+    setStatus("Your browser doesn't support the file picker.", "error");
     return;
   }
-  currentHandle = handle;
-  $("file-name").textContent = handle.name;
-
-  const ok = await ensurePermission(handle, "readonly").catch(() => false);
-  if (!ok) {
-    $("error-msg").textContent = "Permission to read the worklog file was denied. Click retry to try again.";
-    setState("error");
-    return;
-  }
-
   try {
+    const [handle] = await window.showOpenFilePicker({
+      multiple: false,
+      types: [
+        { description: "Worklog", accept: { "text/plain": [".md", ".txt", ".log"] } }
+      ]
+    });
     const file = await handle.getFile();
     const text = await file.text();
-    allEntries = parseEntries(text);
-    render($("search").value);
+    const parsed = parseWorklogText(text);
+    if (parsed.length === 0) {
+      setStatus("No worklog-style entries found in that file.", "error");
+      return;
+    }
+    const { added, total } = await mergeImport(parsed);
+    await load();
+    setStatus(
+      added === 0
+        ? `No new entries — all ${parsed.length} already stored.`
+        : `Imported ${added} new entr${added === 1 ? "y" : "ies"}. Total: ${total}.`
+    );
   } catch (err) {
-    $("error-msg").textContent = `Could not read file: ${err?.message || err}`;
-    setState("error");
+    if (err?.name !== "AbortError") setStatus(String(err?.message || err), "error");
   }
 }
 
-// ── events ────────────────────────────────────────────────────────────────────
+function exportAsMarkdown() {
+  const md = sortNewestFirst(allEntries)
+    .slice().reverse()  // oldest first on export
+    .map(entryToMarkdown)
+    .join("\n");
+  const blob = new Blob([md || "# Worklog\n\n(no entries)\n"], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `worklog-${new Date().toISOString().slice(0, 10)}.md`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 $("search").addEventListener("input", (e) => render(e.target.value));
-$("refresh").addEventListener("click", load);
-$("retry").addEventListener("click", load);
-
-$("go-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+$("import").addEventListener("click", importFromFile);
+$("export").addEventListener("click", exportAsMarkdown);
 $("open-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
 
-// ── init ──────────────────────────────────────────────────────────────────────
+// Reload if entries change in another context (e.g. after a save on locked page).
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.worklogEntries) load();
+});
 
 load();

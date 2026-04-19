@@ -10,38 +10,32 @@
       <div class="logo" aria-hidden="true"></div>
       <div class="header-text">
         <h1>Worklog</h1>
-        <p id="file-name" class="file-name"></p>
+        <p id="subtitle" class="subtitle">Stored in the extension</p>
       </div>
       <div class="header-actions">
-        <button id="refresh" class="icon-btn" title="Reload from file">↻</button>
+        <button id="import" class="ghost" title="Import from worklog file">Import</button>
+        <button id="export" class="ghost" title="Download as Markdown">Export</button>
         <button id="open-settings" class="ghost">Settings</button>
       </div>
     </header>
 
-    <div id="toolbar" hidden>
+    <div id="toolbar">
       <input id="search" type="search" placeholder="Search entries…" />
       <p id="count" class="count"></p>
     </div>
 
     <div id="state-empty" class="state" hidden>
-      <p>No worklog file configured.</p>
-      <button id="go-settings">Open settings to pick a file</button>
-    </div>
-
-    <div id="state-no-entries" class="state" hidden>
-      <p>No entries yet — complete a timer session to add one.</p>
+      <p>No entries yet.</p>
+      <p class="state-hint">Complete a timer session in the popup to add one.</p>
     </div>
 
     <div id="state-no-match" class="state" hidden>
       <p>No entries match your search.</p>
     </div>
 
-    <div id="state-error" class="state error-state" hidden>
-      <p id="error-msg"></p>
-      <button id="retry">Retry</button>
-    </div>
+    <p id="status" class="status" hidden></p>
 
-    <ol id="entries" class="entries" reversed></ol>
+    <ol id="entries" class="entries"></ol>
 
     <script type="module" src="viewer.js"></script>
   </body>
