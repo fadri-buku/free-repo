@@ -1,69 +1,182 @@
 :root {
   color-scheme: light dark;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --accent: #d2503c;
+  --accent-hover: #c0442f;
+  --track: rgba(127, 127, 127, 0.25);
 }
 
+* { box-sizing: border-box; }
+
 body {
-  width: 260px;
+  width: 300px;
   margin: 0;
-  padding: 14px 16px;
+  padding: 16px 18px 18px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 80, 60, 0.25);
 }
 
 h1 {
   font-size: 15px;
-  margin: 0 0 10px;
+  font-weight: 600;
+  margin: 0;
 }
 
 label {
   display: block;
   font-size: 12px;
-  margin-bottom: 4px;
+  margin: 12px 0 6px;
+  opacity: 0.85;
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.preset {
+  padding: 8px 0;
+  font-size: 13px;
+  border: 1px solid var(--track);
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.preset:hover {
+  background: rgba(210, 80, 60, 0.08);
+  border-color: var(--accent);
+}
+
+.row {
+  display: flex;
+  gap: 6px;
 }
 
 input[type="number"] {
-  width: 100%;
-  padding: 6px 8px;
+  flex: 1;
+  padding: 8px 10px;
   font-size: 14px;
-  box-sizing: border-box;
-  margin-bottom: 10px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--track);
+  border-radius: 6px;
+}
+
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 80, 60, 0.2);
 }
 
 button {
-  width: 100%;
-  padding: 8px 10px;
+  font: inherit;
   font-size: 14px;
-  background: #d2503c;
-  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
   border: 0;
-  border-radius: 4px;
   cursor: pointer;
+  background: var(--accent);
+  color: white;
+  transition: background 0.12s, transform 0.08s;
 }
+
+button:hover { background: var(--accent-hover); }
+button:active { transform: translateY(1px); }
+
+button.primary { background: var(--accent); color: white; }
 
 button.secondary {
   background: transparent;
   color: inherit;
-  border: 1px solid currentColor;
+  border: 1px solid var(--track);
+  width: 100%;
+}
+
+button.secondary:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+
+#start { min-width: 80px; }
+
+.ring-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 4px auto 14px;
+  width: 160px;
+  height: 160px;
+}
+
+.ring-track { stroke: var(--track); }
+.ring-progress {
+  stroke: var(--accent);
+  stroke-dasharray: 339.292;           /* 2 * pi * 54 */
+  stroke-dashoffset: 339.292;
+  transition: stroke-dashoffset 0.5s linear;
+}
+
+.ring-label {
+  position: absolute;
+  text-align: center;
 }
 
 .big {
-  font-size: 32px;
+  font-size: 30px;
   font-variant-numeric: tabular-nums;
-  margin: 6px 0 14px;
-  text-align: center;
+  margin: 0;
+  font-weight: 600;
+}
+
+.muted-inline {
+  font-size: 11px;
+  margin: 2px 0 0;
+  opacity: 0.65;
 }
 
 .muted {
   font-size: 11px;
   opacity: 0.7;
-  margin: 10px 0 4px;
+  margin: 12px 0 4px;
 }
 
 .error {
-  color: #d2503c;
+  color: var(--accent);
   font-size: 12px;
   margin-top: 10px;
 }
 
+.awaiting-text {
+  font-size: 13px;
+  text-align: center;
+  margin: 6px 0 14px;
+}
+
+#open-locked { width: 100%; }
+
 a {
   font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
 }
+
+a:hover { text-decoration: underline; }

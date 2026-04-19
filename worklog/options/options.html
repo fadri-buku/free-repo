@@ -7,7 +7,10 @@
   </head>
   <body>
     <main>
-      <h1>Worklog Pomodoro settings</h1>
+      <header class="page-header">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Worklog Pomodoro settings</h1>
+      </header>
 
       <section>
         <h2>Worklog file</h2>
@@ -25,7 +28,25 @@
         <p id="error" class="error" hidden></p>
         <p id="success" class="success" hidden></p>
       </section>
+
+      <section>
+        <h2>Alarm sound</h2>
+        <p class="muted">
+          The default alarm is bundled with the extension and plays in a loop on the
+          locked tab when the timer ends. Use the controls below to preview it.
+        </p>
+        <div class="actions alarm-preview">
+          <button id="test-alarm">\u25B6 Preview</button>
+          <button id="stop-alarm" class="ghost" disabled>Stop</button>
+          <label class="volume">
+            <span aria-hidden="true">\u{1F50A}</span>
+            <input id="volume" type="range" min="0" max="100" value="70" />
+          </label>
+        </div>
+      </section>
     </main>
+
+    <audio id="alarm-audio" src="../assets/alarm.wav" loop preload="auto"></audio>
     <script type="module" src="options.js"></script>
   </body>
 </html>

@@ -5,40 +5,63 @@ import {
 } from "../lib/file-handle-store.js";
 
 const $ = (id) => document.getElementById(id);
+const audio = $("alarm-audio");
+const indicator = $("alarm-indicator");
 
-let audioCtx = null;
-let alarmTimer = null;
+let fallbackCtx = null;
+let fallbackTimer = null;
 
-function startAlarm() {
+async function playAudio() {
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.currentTime = 0;
+    await audio.play();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function startFallbackBeep() {
+  try {
+    fallbackCtx = new (window.AudioContext || window.webkitAudioContext)();
   } catch {
     return;
   }
   const beep = () => {
-    const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    if (!fallbackCtx) return;
+    const now = fallbackCtx.currentTime;
+    const osc = fallbackCtx.createOscillator();
+    const gain = fallbackCtx.createGain();
     osc.type = "sine";
     osc.frequency.setValueAtTime(880, now);
+    const vol = Number($("volume").value) / 100 * 0.3;
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-    osc.connect(gain).connect(audioCtx.destination);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, vol), now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+    osc.connect(gain).connect(fallbackCtx.destination);
     osc.start(now);
     osc.stop(now + 0.4);
   };
   beep();
-  alarmTimer = setInterval(beep, 900);
+  fallbackTimer = setInterval(beep, 900);
+}
+
+async function startAlarm() {
+  audio.volume = Number($("volume").value) / 100;
+  const ok = await playAudio();
+  if (!ok) startFallbackBeep();
 }
 
 function stopAlarm() {
-  if (alarmTimer) clearInterval(alarmTimer);
-  alarmTimer = null;
-  if (audioCtx) {
-    try { audioCtx.close(); } catch {}
-    audioCtx = null;
+  audio.pause();
+  audio.currentTime = 0;
+  if (fallbackTimer) clearInterval(fallbackTimer);
+  fallbackTimer = null;
+  if (fallbackCtx) {
+    try { fallbackCtx.close(); } catch {}
+    fallbackCtx = null;
   }
+  indicator.classList.add("muted");
 }
 
 function flashTitle() {
@@ -59,11 +82,15 @@ function showError(msg) {
 
 async function init() {
   flashTitle();
-  // Autoplay in extension pages is permitted; fall back to user gesture if blocked.
-  startAlarm();
-  document.addEventListener("visibilitychange", () => {
-    // Keep alarm going until acknowledged; nothing to do here.
-  });
+  await startAlarm();
+
+  // If autoplay was blocked, resume on first user interaction.
+  document.addEventListener("click", async function onClick() {
+    if (audio.paused && !fallbackTimer) {
+      await startAlarm();
+    }
+    document.removeEventListener("click", onClick);
+  }, { once: true });
 
   const handle = await loadFileHandle().catch(() => null);
   $("file-info").textContent = handle
@@ -71,10 +98,14 @@ async function init() {
     : "No worklog file set. Open settings to pick one \u2014 your entry won't save until you do.";
 }
 
+$("volume").addEventListener("input", (e) => {
+  audio.volume = Number(e.target.value) / 100;
+});
+
 $("mute").addEventListener("click", () => {
   stopAlarm();
   $("mute").disabled = true;
-  $("mute").textContent = "Alarm muted";
+  $("mute-label").textContent = "Alarm muted";
 });
 
 $("save").addEventListener("click", async () => {

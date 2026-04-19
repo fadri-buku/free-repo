@@ -6,26 +6,49 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <h1>Worklog Pomodoro</h1>
+    <header>
+      <div class="logo" aria-hidden="true"></div>
+      <h1>Worklog Pomodoro</h1>
+    </header>
 
-    <div id="idle" hidden>
-      <label for="minutes">Work duration (minutes)</label>
-      <input id="minutes" type="number" min="1" max="480" step="1" value="25" />
-      <button id="start">Start</button>
+    <section id="idle" hidden>
+      <div class="presets" role="group" aria-label="Duration presets">
+        <button class="preset" data-minutes="15">15m</button>
+        <button class="preset" data-minutes="25">25m</button>
+        <button class="preset" data-minutes="45">45m</button>
+        <button class="preset" data-minutes="60">60m</button>
+      </div>
+
+      <label for="minutes">Custom duration (minutes)</label>
+      <div class="row">
+        <input id="minutes" type="number" min="1" max="480" step="1" value="25" />
+        <button id="start" class="primary">Start</button>
+      </div>
+
       <p id="file-status" class="muted"></p>
       <a id="options-link" href="#">Worklog file settings</a>
-    </div>
+    </section>
 
-    <div id="running" hidden>
-      <p>Time remaining</p>
-      <p id="remaining" class="big">--:--</p>
+    <section id="running" hidden>
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120" width="160" height="160" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="54" fill="none" stroke-width="8" />
+          <circle id="ring-progress" class="ring-progress" cx="60" cy="60" r="54"
+            fill="none" stroke-width="8" stroke-linecap="round"
+            transform="rotate(-90 60 60)" />
+        </svg>
+        <div class="ring-label">
+          <p id="remaining" class="big">--:--</p>
+          <p id="running-total" class="muted-inline">of --</p>
+        </div>
+      </div>
       <button id="cancel" class="secondary">Cancel</button>
-    </div>
+    </section>
 
-    <div id="awaiting" hidden>
-      <p>Timer finished. Open the worklog tab to acknowledge.</p>
-      <button id="open-locked">Open worklog</button>
-    </div>
+    <section id="awaiting" hidden>
+      <p class="awaiting-text">\u23F0 Timer finished. Acknowledge your worklog to continue.</p>
+      <button id="open-locked" class="primary">Open worklog</button>
+    </section>
 
     <p id="error" class="error" hidden></p>
     <script type="module" src="popup.js"></script>

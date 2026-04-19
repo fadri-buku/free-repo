@@ -21,34 +21,75 @@ body {
   justify-content: center;
   padding: 24px;
   box-sizing: border-box;
-  background: radial-gradient(circle at 50% 30%, #3a1a14, #0f0f0f 70%);
+  background: radial-gradient(circle at 50% 20%, #4a1f18, #0d0d0d 70%);
+  animation: bg-pulse 2s ease-in-out infinite;
+}
+
+@keyframes bg-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.15); }
 }
 
 .card {
   width: 100%;
-  max-width: 640px;
-  background: #222;
+  max-width: 680px;
+  background: #242424;
   border: 1px solid #3a3a3a;
-  border-radius: 10px;
-  padding: 28px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-  animation: pulse 1.2s ease-in-out 3;
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6); }
-  50% { box-shadow: 0 12px 60px rgba(210, 80, 60, 0.6); }
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.alarm-indicator {
+  width: 34px;
+  height: 34px;
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.alarm-indicator span {
+  width: 6px;
+  background: #ff8370;
+  border-radius: 2px;
+  animation: bars 0.8s ease-in-out infinite;
+}
+
+.alarm-indicator span:nth-child(1) { animation-delay: 0s;   height: 40%; }
+.alarm-indicator span:nth-child(2) { animation-delay: 0.1s; height: 70%; }
+.alarm-indicator span:nth-child(3) { animation-delay: 0.2s; height: 55%; }
+
+.alarm-indicator.muted span {
+  animation: none;
+  background: #555;
+  height: 30%;
+}
+
+@keyframes bars {
+  0%, 100% { transform: scaleY(0.4); transform-origin: bottom; }
+  50%      { transform: scaleY(1.0); transform-origin: bottom; }
 }
 
 h1 {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 28px;
   color: #ff8370;
+  line-height: 1.1;
 }
 
 .subtitle {
-  margin: 0 0 16px;
-  opacity: 0.85;
+  margin: 4px 0 0;
+  opacity: 0.8;
+  font-size: 14px;
 }
 
 textarea {
@@ -56,18 +97,45 @@ textarea {
   box-sizing: border-box;
   font: inherit;
   font-size: 14px;
-  padding: 10px 12px;
-  background: #111;
+  padding: 12px 14px;
+  background: #121212;
   color: inherit;
-  border: 1px solid #444;
-  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
   resize: vertical;
+  line-height: 1.5;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #ff8370;
+  box-shadow: 0 0 0 3px rgba(255, 131, 112, 0.2);
+}
+
+.alarm-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.volume {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.volume input[type="range"] {
+  width: 140px;
+  accent-color: #ff8370;
 }
 
 .muted {
   font-size: 12px;
   opacity: 0.7;
-  margin: 10px 0 0;
+  margin: 14px 0 0;
 }
 
 .error {
@@ -78,21 +146,24 @@ textarea {
 
 .actions {
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 button {
   font: inherit;
   font-size: 14px;
-  padding: 9px 16px;
+  padding: 10px 18px;
   border-radius: 6px;
   border: 0;
   cursor: pointer;
   background: #d2503c;
   color: white;
+  transition: transform 0.08s, background 0.15s;
 }
+
+button:hover { background: #c0442f; }
+button:active { transform: translateY(1px); }
 
 button.ghost {
   background: transparent;
@@ -100,7 +171,10 @@ button.ghost {
   color: inherit;
 }
 
+button.ghost:hover { background: rgba(255, 255, 255, 0.06); }
+
 button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: default;
+  transform: none;
 }

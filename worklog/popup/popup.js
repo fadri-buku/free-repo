@@ -1,7 +1,9 @@
 import { loadFileHandle } from "../lib/file-handle-store.js";
 
 const $ = (id) => document.getElementById(id);
+const RING_CIRC = 2 * Math.PI * 54;
 let tickTimer = null;
+let currentTotalMs = null;
 
 function show(section) {
   for (const id of ["idle", "running", "awaiting"]) {
@@ -24,11 +26,18 @@ function formatRemaining(ms) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-function startTick(endTime) {
+function setRingProgress(remaining, total) {
+  const ratio = total > 0 ? Math.max(0, Math.min(1, remaining / total)) : 0;
+  $("ring-progress").style.strokeDashoffset = String(RING_CIRC * (1 - ratio));
+}
+
+function startTick(endTime, totalMs) {
   stopTick();
+  currentTotalMs = totalMs;
   const update = () => {
     const remaining = endTime - Date.now();
     $("remaining").textContent = formatRemaining(remaining);
+    setRingProgress(remaining, totalMs);
     if (remaining <= 0) {
       stopTick();
       render();
@@ -43,28 +52,8 @@ function stopTick() {
   tickTimer = null;
 }
 
-async function render() {
+async function startWith(minutes) {
   showError(null);
-  const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-  if (state?.awaitingAck) {
-    show("awaiting");
-    return;
-  }
-  if (state?.running && state.endTime && state.endTime > Date.now()) {
-    show("running");
-    startTick(state.endTime);
-    return;
-  }
-  show("idle");
-  const handle = await loadFileHandle().catch(() => null);
-  $("file-status").textContent = handle
-    ? `Worklog file: ${handle.name}`
-    : "No worklog file set \u2014 configure one first.";
-}
-
-$("start").addEventListener("click", async () => {
-  showError(null);
-  const minutes = Number($("minutes").value);
   if (!Number.isFinite(minutes) || minutes <= 0) {
     showError("Enter a positive number of minutes.");
     return;
@@ -80,6 +69,37 @@ $("start").addEventListener("click", async () => {
     return;
   }
   render();
+}
+
+async function render() {
+  showError(null);
+  const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
+  if (state?.awaitingAck) {
+    show("awaiting");
+    return;
+  }
+  if (state?.running && state.endTime && state.endTime > Date.now()) {
+    const totalMs = (state.minutes || 25) * 60 * 1000;
+    $("running-total").textContent = `of ${state.minutes}m`;
+    show("running");
+    startTick(state.endTime, totalMs);
+    return;
+  }
+  show("idle");
+  const handle = await loadFileHandle().catch(() => null);
+  $("file-status").textContent = handle
+    ? `Worklog file: ${handle.name}`
+    : "No worklog file set \u2014 configure one first.";
+}
+
+for (const btn of document.querySelectorAll(".preset")) {
+  btn.addEventListener("click", () => startWith(Number(btn.dataset.minutes)));
+}
+
+$("start").addEventListener("click", () => startWith(Number($("minutes").value)));
+
+$("minutes").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") startWith(Number($("minutes").value));
 });
 
 $("cancel").addEventListener("click", async () => {

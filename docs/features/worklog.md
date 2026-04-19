@@ -9,7 +9,9 @@ Source: [`worklog/`](../../worklog/)
 ## What it does
 
 1. You pick a worklog file once in the extension's options (Markdown or text).
-2. You open the extension popup, type a duration in minutes, and hit **Start**.
+2. You open the extension popup and start a timer either via a preset chip
+   (15 / 25 / 45 / 60 min) or by typing a custom duration and hitting
+   **Start**. While it's running the popup shows a circular progress ring.
 3. The timer runs in the background even if you close the popup.
 4. When the timer ends, the extension:
    - Fires a system notification that requires interaction.
@@ -74,12 +76,14 @@ worklog/
 │   ├── locked.html
 │   ├── locked.css
 │   └── locked.js
-├── options/                    # Settings page for picking the worklog file
+├── options/                    # Settings page: worklog file + alarm preview
 │   ├── options.html
 │   ├── options.css
 │   └── options.js
 ├── lib/
 │   └── file-handle-store.js    # IndexedDB persistence + permission + append helpers
+├── assets/
+│   └── alarm.wav               # Bundled default alarm sound (looped on locked page)
 └── icons/                      # 16/48/128 PNG icons
 ```
 
@@ -91,9 +95,12 @@ worklog/
   notification and opens `locked/locked.html` in a new focused tab. A
   `chrome.tabs.onRemoved` listener reopens the locked tab if it is closed
   before the user acknowledges.
-- **Alarm sound.** The locked page generates a looping beep with the Web
-  Audio API (no audio files shipped). A **Mute alarm** button silences it
-  without acknowledging.
+- **Alarm sound.** The locked page plays a bundled default alarm
+  ([`worklog/assets/alarm.wav`](../../worklog/assets/alarm.wav), a
+  three-chirp ~1.1s loop generated at build time) via an `<audio loop>`
+  element. A volume slider and **Mute alarm** button are provided. If
+  autoplay is blocked or the WAV fails to load, the page falls back to a
+  Web Audio sine-wave beep so there's always *some* audible alarm.
 - **File writes.** The worklog file is persisted as a `FileSystemFileHandle`
   in IndexedDB. On save, the extension re-checks `readwrite` permission
   (Chrome may require a one-click re-grant after browser restart), reads the

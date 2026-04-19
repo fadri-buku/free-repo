@@ -6,6 +6,7 @@ import {
 } from "../lib/file-handle-store.js";
 
 const $ = (id) => document.getElementById(id);
+const audio = $("alarm-audio");
 
 function setStatus({ error, success } = {}) {
   const e = $("error"), s = $("success");
@@ -76,6 +77,32 @@ $("clear").addEventListener("click", async () => {
   await clearFileHandle();
   await render();
   setStatus({ success: "Cleared." });
+});
+
+$("volume").addEventListener("input", (e) => {
+  audio.volume = Number(e.target.value) / 100;
+});
+
+$("test-alarm").addEventListener("click", async () => {
+  audio.volume = Number($("volume").value) / 100;
+  try {
+    audio.currentTime = 0;
+    await audio.play();
+    $("stop-alarm").disabled = false;
+  } catch (err) {
+    setStatus({ error: `Couldn't play alarm: ${err?.message || err}` });
+  }
+});
+
+$("stop-alarm").addEventListener("click", () => {
+  audio.pause();
+  audio.currentTime = 0;
+  $("stop-alarm").disabled = true;
+});
+
+audio.addEventListener("ended", () => {
+  // loop=true means this rarely fires, but keep the button state sane.
+  $("stop-alarm").disabled = true;
 });
 
 render();
