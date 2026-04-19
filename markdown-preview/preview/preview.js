@@ -1,4 +1,5 @@
 import { renderMarkdown } from "../lib/render.js";
+import { renderDiagramsInElement } from "../lib/diagram-render.js";
 import {
   saveFileHandle, loadFileHandle, clearFileHandle,
   ensurePermission, readFile,
@@ -26,8 +27,15 @@ function showError(msg) {
   errorEl.textContent = msg;
 }
 
+let renderToken = 0;
 function renderNow() {
   renderedEl.innerHTML = renderMarkdown(sourceEl.value);
+  const token = ++renderToken;
+  // Upgrade fenced mermaid/nomnoml blocks to SVG. Token guards against a
+  // slow diagram render clobbering a newer DOM if the user kept typing.
+  renderDiagramsInElement(renderedEl).then(() => {
+    if (token !== renderToken) return;
+  }).catch((err) => showError(err.message));
 }
 
 function scheduleRender() {

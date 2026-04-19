@@ -193,6 +193,29 @@ button.secondary:hover { background: rgba(127, 127, 127, 0.08); }
 
 .markdown-body img { max-width: 100%; height: auto; border-radius: 4px; }
 
+.markdown-body .diagram {
+  margin: 1em 0;
+  text-align: center;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+.markdown-body .diagram svg {
+  max-width: 100%;
+  height: auto;
+  display: inline-block;
+}
+.markdown-body .diagram-error {
+  text-align: left;
+  background: rgba(192, 68, 47, 0.08);
+  border: 1px solid rgba(192, 68, 47, 0.35);
+  color: #c0442f;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
 .error {
   margin: 0;
   padding: 8px 14px;

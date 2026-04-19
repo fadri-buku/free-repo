@@ -16,6 +16,9 @@ Source: [`markdown-preview/`](../../markdown-preview/)
 - Persists the last-used file handle in IndexedDB and the current textarea
   contents in `chrome.storage.local` so the preview tab survives restarts.
 - Sync-scrolls the two panes by proportional position (toggleable).
+- Renders fenced `mermaid` and `nomnoml` code blocks as inline SVG
+  diagrams — fully local, no network. Libraries are vendored separately
+  (see [Diagrams](#diagrams) below).
 
 ## Install (unpacked)
 
@@ -97,6 +100,65 @@ footnotes, math, or task lists, this is the file to extend.
   recently opened `FileSystemFileHandle`. Opaque to `chrome.storage`; survives
   restarts but requires a user gesture (clicking **Reload**) to re-grant read
   permission.
+
+## Diagrams
+
+Fenced code blocks tagged **`mermaid`** or **`nomnoml`** are rendered as
+inline SVG directly inside the preview:
+
+<pre>
+```mermaid
+flowchart LR
+  A[Start] --> B{Decide} --> C[Do thing]
+```
+
+```nomnoml
+[User] -> [Server] -> [DB]
+```
+</pre>
+
+### Install the libraries (one-time)
+
+The rendering libraries are not checked into git — they're large and
+vendoring them would bloat the repo. Drop them into
+[`markdown-preview/lib/vendor/`](../../markdown-preview/lib/vendor/) once:
+
+```sh
+# Mermaid (flowchart, sequence, class, ER, state, gantt, pie, gitGraph…)
+curl -L \
+  -o markdown-preview/lib/vendor/mermaid.esm.min.mjs \
+  https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs
+
+# Nomnoml (class / component diagrams)
+curl -L \
+  -o markdown-preview/lib/vendor/nomnoml.js \
+  https://cdn.jsdelivr.net/npm/nomnoml@1.6.2/dist/nomnoml.js
+```
+
+See [`markdown-preview/lib/vendor/README.md`](../../markdown-preview/lib/vendor/README.md)
+for rationale, version guidance, and audit notes.
+
+### How the pass works
+
+After every Markdown re-render, `lib/diagram-render.js` walks the rendered
+DOM, finds `code.language-mermaid` / `code.language-nomnoml`, and replaces
+each `<pre>` with the SVG returned by the library. Rendered SVGs are cached
+by `(format, source)` so unchanged diagrams don't re-render while you type
+elsewhere in the document. Libraries are loaded lazily on first use and
+reused thereafter.
+
+If a library file is missing, only that diagram shows an inline error
+pointing at the vendor README; the rest of the preview keeps working.
+
+### Security notes
+
+- Mermaid is initialized with `securityLevel: "strict"` so script tags and
+  event handlers in rendered SVG are removed.
+- The diagram pass runs **after** the Markdown sanitizer, so user markdown
+  can't inject arbitrary HTML via a fake diagram block — the source arrives
+  as plain text inside a `<code>` element.
+- The vendored libraries execute in the extension's origin and have access
+  to `chrome.storage.local`. Only drop in files you've audited.
 
 ## Caveats
 
