@@ -1,0 +1,3 @@
+# Downloaded by setup.sh — large binaries, don't commit.
+vendor/
+models/

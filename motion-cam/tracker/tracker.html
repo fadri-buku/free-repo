@@ -15,9 +15,17 @@
           <input id="sensitivity" type="range" min="1" max="100" value="40" />
           <span id="sensitivity-val">40</span>
         </label>
+        <span id="people" class="people" hidden>
+          <strong id="people-count">0</strong> people
+        </span>
         <span id="status" class="status">idle</span>
       </div>
     </header>
+
+    <div id="pose-banner" class="banner" hidden>
+      People counting is disabled.
+      <a href="#" id="pose-banner-details">Why?</a>
+    </div>
 
     <main>
       <div class="stage">

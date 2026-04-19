@@ -1,9 +1,16 @@
+import {
+  loadPoseDetector,
+  boundingBoxesFromPoses,
+  smoothCount,
+} from "./pose.js";
+
 const WORK_W = 160;
 const WORK_H = 120;
 const PIXEL_DIFF = 25;
 const METER_MAX = 0.3;
 const QUIET_FRAMES_TO_END = 15;
 const MAX_EVENTS = 50;
+const POSE_NUM = 6;
 
 const video = document.getElementById("video");
 const overlay = document.getElementById("overlay");
@@ -21,12 +28,21 @@ const meterFill = document.getElementById("meter-fill");
 const meterThresh = document.getElementById("meter-threshold");
 const logEl = document.getElementById("log");
 const clearBtn = document.getElementById("clear");
+const peopleEl = document.getElementById("people");
+const peopleCountEl = document.getElementById("people-count");
+const poseBanner = document.getElementById("pose-banner");
+const poseBannerDetails = document.getElementById("pose-banner-details");
 
 let stream = null;
 let rafId = 0;
 let prev = null;
 let currentEvent = null;
 let sensitivity = 40;
+
+let poseDetector = null;
+let poseState = "idle";
+let poseBoxes = [];
+const countHistory = [];
 
 function scoreThreshold() {
   return 0.2 - (sensitivity / 100) * 0.18;
@@ -78,7 +94,11 @@ function renderLog(events) {
     const d = new Date(e.time);
     const dur = (e.durationMs / 1000).toFixed(1);
     const peak = Math.round(e.peakScore * 100);
-    li.textContent = `${d.toLocaleTimeString()} — ${dur}s (peak ${peak}%)`;
+    const people =
+      typeof e.peakPeople === "number" && e.peakPeople > 0
+        ? `, ${e.peakPeople} ppl`
+        : "";
+    li.textContent = `${d.toLocaleTimeString()} — ${dur}s (peak ${peak}%${people})`;
     logEl.appendChild(li);
   }
 }
@@ -98,6 +118,41 @@ clearBtn.addEventListener("click", async () => {
   await chrome.storage.local.set({ motionCamEvents: [] });
 });
 
+poseBannerDetails.addEventListener("click", (e) => {
+  e.preventDefault();
+  alert(
+    "To enable people counting, run motion-cam/setup.sh once to download the " +
+      "MediaPipe Pose Landmarker model and WASM files into vendor/ and models/. " +
+      "Then reload the extension.",
+  );
+});
+
+async function ensurePoseDetector() {
+  if (poseDetector || poseState === "loading" || poseState === "missing") {
+    return poseDetector;
+  }
+  poseState = "loading";
+  statusEl.textContent = "loading pose model…";
+  try {
+    poseDetector = await loadPoseDetector({ numPoses: POSE_NUM });
+    poseState = "ready";
+    poseBanner.hidden = true;
+    peopleEl.hidden = false;
+  } catch (err) {
+    poseDetector = null;
+    if (err?.message === "missing-assets") {
+      poseState = "missing";
+      poseBanner.hidden = false;
+    } else {
+      poseState = "error";
+      poseBanner.hidden = false;
+      poseBanner.textContent = `People counting failed to load: ${err?.message ?? err}`;
+    }
+    peopleEl.hidden = true;
+  }
+  return poseDetector;
+}
+
 async function startCamera() {
   statusEl.textContent = "requesting camera…";
   try {
@@ -113,6 +168,9 @@ async function startCamera() {
     statusEl.textContent = "live";
     statusEl.classList.add("active");
     prev = null;
+    poseBoxes = [];
+    countHistory.length = 0;
+    ensurePoseDetector();
     tick();
   } catch (e) {
     statusEl.textContent = `error: ${e.message}`;
@@ -131,6 +189,8 @@ function stopCamera() {
   statusEl.textContent = "idle";
   statusEl.classList.remove("active");
   prev = null;
+  poseBoxes = [];
+  peopleCountEl.textContent = "0";
   if (currentEvent) endEvent();
   meterFill.style.width = "0%";
 }
@@ -138,13 +198,24 @@ function stopCamera() {
 function tick() {
   rafId = requestAnimationFrame(tick);
   if (video.readyState < 2) return;
+
   wctx.drawImage(video, 0, 0, WORK_W, WORK_H);
   const cur = wctx.getImageData(0, 0, WORK_W, WORK_H);
-  if (prev) analyze(prev, cur);
+  let motionBox = null;
+  let motionScore = 0;
+  if (prev) {
+    const res = analyzeMotion(prev, cur);
+    motionBox = res.box;
+    motionScore = res.score;
+  }
   prev = cur;
+
+  runPose();
+  drawOverlay(motionBox, motionScore);
+  handleEvent(motionBox, motionScore);
 }
 
-function analyze(prevImg, curImg) {
+function analyzeMotion(prevImg, curImg) {
   const a = prevImg.data;
   const b = curImg.data;
   let count = 0;
@@ -169,35 +240,76 @@ function analyze(prevImg, curImg) {
   }
 
   const score = count / (WORK_W * WORK_H);
-  const threshold = scoreThreshold();
   meterFill.style.width =
     Math.min(100, (score / METER_MAX) * 100).toFixed(1) + "%";
+  if (maxX < 0) return { score, box: null };
+  return { score, box: { minX, minY, maxX, maxY } };
+}
 
+function runPose() {
+  if (!poseDetector) return;
+  try {
+    const res = poseDetector.detectForVideo(video, performance.now());
+    poseBoxes = boundingBoxesFromPoses(res.landmarks ?? []);
+    const smoothed = smoothCount(countHistory, poseBoxes.length);
+    peopleCountEl.textContent = String(smoothed);
+  } catch (err) {
+    console.warn("[motion-cam] pose detection tick failed:", err);
+  }
+}
+
+function drawOverlay(motionBox, motionScore) {
   octx.clearRect(0, 0, overlay.width, overlay.height);
 
-  if (score > threshold && maxX >= 0) {
+  if (motionBox && motionScore > scoreThreshold()) {
     const sx = overlay.width / WORK_W;
     const sy = overlay.height / WORK_H;
-    const bx = minX * sx;
-    const by = minY * sy;
-    const bw = (maxX - minX + 1) * sx;
-    const bh = (maxY - minY + 1) * sy;
-
+    const bx = motionBox.minX * sx;
+    const by = motionBox.minY * sy;
+    const bw = (motionBox.maxX - motionBox.minX + 1) * sx;
+    const bh = (motionBox.maxY - motionBox.minY + 1) * sy;
     octx.strokeStyle = "rgba(224, 71, 107, 0.9)";
     octx.lineWidth = 3;
     octx.strokeRect(bx, by, bw, bh);
     octx.font = "14px system-ui, sans-serif";
     octx.fillStyle = "rgba(224, 71, 107, 0.95)";
-    octx.fillText(`motion ${Math.round(score * 100)}%`, bx + 4, Math.max(14, by - 6));
+    octx.fillText(
+      `motion ${Math.round(motionScore * 100)}%`,
+      bx + 4,
+      Math.max(14, by - 6),
+    );
+  }
 
+  for (let i = 0; i < poseBoxes.length; i++) {
+    const p = poseBoxes[i];
+    const x = p.minX * overlay.width;
+    const y = p.minY * overlay.height;
+    const w = (p.maxX - p.minX) * overlay.width;
+    const h = (p.maxY - p.minY) * overlay.height;
+    octx.strokeStyle = "rgba(14, 165, 233, 0.9)";
+    octx.lineWidth = 2;
+    octx.strokeRect(x, y, w, h);
+    octx.font = "13px system-ui, sans-serif";
+    octx.fillStyle = "rgba(14, 165, 233, 0.95)";
+    octx.fillText(`#${i + 1}`, x + 4, Math.max(13, y - 4));
+  }
+}
+
+function handleEvent(motionBox, motionScore) {
+  if (motionBox && motionScore > scoreThreshold()) {
     if (!currentEvent) {
       currentEvent = {
         startedAt: Date.now(),
-        peakScore: score,
+        peakScore: motionScore,
+        peakPeople: poseBoxes.length,
         quietFrames: 0,
       };
     } else {
-      currentEvent.peakScore = Math.max(currentEvent.peakScore, score);
+      currentEvent.peakScore = Math.max(currentEvent.peakScore, motionScore);
+      currentEvent.peakPeople = Math.max(
+        currentEvent.peakPeople,
+        poseBoxes.length,
+      );
       currentEvent.quietFrames = 0;
     }
   } else if (currentEvent) {
@@ -216,9 +328,11 @@ function endEvent() {
     time: e.startedAt,
     durationMs: Math.max(100, Date.now() - e.startedAt),
     peakScore: e.peakScore,
+    peakPeople: e.peakPeople,
   });
 }
 
 window.addEventListener("beforeunload", () => {
   stream?.getTracks().forEach((t) => t.stop());
+  poseDetector?.close?.();
 });

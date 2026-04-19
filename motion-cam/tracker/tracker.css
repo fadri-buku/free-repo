@@ -94,6 +94,32 @@ button.link {
   opacity: 1;
 }
 
+.people {
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.18);
+  color: #0ea5e9;
+}
+
+.people strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.banner {
+  margin: 0;
+  padding: 8px 20px;
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+  font-size: 12px;
+}
+
+.banner a {
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 main {
   flex: 1;
   display: grid;

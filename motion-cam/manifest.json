@@ -2,10 +2,13 @@
   "manifest_version": 3,
   "name": "Motion Cam",
   "version": "1.0.0",
-  "description": "Webcam movement tracker. Highlights motion in the camera feed and logs timestamped motion events.",
+  "description": "Webcam movement tracker with optional on-device people counting (MediaPipe Pose). Highlights motion and logs timestamped events.",
   "permissions": ["storage"],
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "Motion Cam"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
   }
 }
