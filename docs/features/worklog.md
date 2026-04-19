@@ -96,11 +96,12 @@ worklog/
   `chrome.tabs.onRemoved` listener reopens the locked tab if it is closed
   before the user acknowledges.
 - **Alarm sound.** The locked page plays a bundled default alarm
-  ([`worklog/assets/alarm.wav`](../../worklog/assets/alarm.wav), a
-  three-chirp ~1.1s loop generated at build time) via an `<audio loop>`
-  element. A volume slider and **Mute alarm** button are provided. If
-  autoplay is blocked or the WAV fails to load, the page falls back to a
-  Web Audio sine-wave beep so there's always *some* audible alarm.
+  ([`worklog/assets/alarm.wav`](../../worklog/assets/alarm.wav), a soft
+  ~2.5s C-major triad chime — C5 → E5 → G5 with bell-like decay) via an
+  `<audio loop>` element. A volume slider and **Mute alarm** button are
+  provided. If autoplay is blocked or the WAV fails to load, the page
+  falls back to a Web Audio version of the same chime so there's always
+  *some* audible alarm.
 - **File writes.** The worklog file is persisted as a `FileSystemFileHandle`
   in IndexedDB. On save, the extension re-checks `readwrite` permission
   (Chrome may require a one-click re-grant after browser restart), reads the

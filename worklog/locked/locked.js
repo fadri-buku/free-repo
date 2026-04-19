@@ -27,23 +27,28 @@ function startFallbackBeep() {
   } catch {
     return;
   }
-  const beep = () => {
+  // Soft triad chime (C5, E5, G5) as a loop. Each tick plays the full arpeggio.
+  const chime = () => {
     if (!fallbackCtx) return;
     const now = fallbackCtx.currentTime;
-    const osc = fallbackCtx.createOscillator();
-    const gain = fallbackCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(880, now);
-    const vol = Number($("volume").value) / 100 * 0.3;
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, vol), now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
-    osc.connect(gain).connect(fallbackCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.4);
+    const vol = Number($("volume").value) / 100 * 0.25;
+    const notes = [523.25, 659.25, 783.99];
+    notes.forEach((freq, i) => {
+      const start = now + i * 0.22;
+      const osc = fallbackCtx.createOscillator();
+      const gain = fallbackCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, vol), start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.2);
+      osc.connect(gain).connect(fallbackCtx.destination);
+      osc.start(start);
+      osc.stop(start + 1.3);
+    });
   };
-  beep();
-  fallbackTimer = setInterval(beep, 900);
+  chime();
+  fallbackTimer = setInterval(chime, 2500);
 }
 
 async function startAlarm() {
