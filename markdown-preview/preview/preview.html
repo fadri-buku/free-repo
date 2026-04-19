@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Markdown Preview</title>
+    <link rel="stylesheet" href="preview.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Markdown Preview</h1>
+      <div class="toolbar">
+        <button id="open-file" class="secondary">Open file…</button>
+        <button id="reload-file" class="secondary" hidden>Reload</button>
+        <button id="clear-file" class="secondary" hidden>Detach</button>
+        <span id="file-name" class="file-name muted"></span>
+        <span class="spacer"></span>
+        <label class="toggle">
+          <input id="sync-scroll" type="checkbox" checked />
+          <span>Sync scroll</span>
+        </label>
+      </div>
+    </header>
+
+    <main class="split">
+      <section class="pane editor-pane">
+        <header class="pane-head">Source</header>
+        <textarea id="source" spellcheck="false"
+          placeholder="Paste or type Markdown here, or click Open file…"></textarea>
+      </section>
+      <section class="pane preview-pane">
+        <header class="pane-head">Preview</header>
+        <article id="rendered" class="markdown-body"></article>
+      </section>
+    </main>
+
+    <p id="error" class="error" hidden></p>
+    <script type="module" src="preview.js"></script>
+  </body>
+</html>

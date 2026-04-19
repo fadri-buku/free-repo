@@ -9,6 +9,10 @@ top-level folder and is documented under [`docs/`](./docs/overview.md).
   countdown timer that locks Chrome when time's up and appends a free-text
   worklog entry to a file you choose.
   See [`docs/features/worklog.md`](./docs/features/worklog.md).
+- **[Markdown Preview](./markdown-preview/)** — Chrome extension with a
+  side-by-side editor and live, sanitized preview of Markdown, from text or a
+  local file.
+  See [`docs/features/markdown-preview.md`](./docs/features/markdown-preview.md).
 
 ## Docs
 

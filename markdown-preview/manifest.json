@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Markdown Preview",
+  "version": "1.0.0",
+  "description": "Open a Markdown file or paste text and see a live, sanitized HTML preview alongside the source.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Markdown Preview",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

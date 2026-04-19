@@ -12,8 +12,10 @@ free-repo/
 ├── docs/
 │   ├── overview.md            # This file
 │   └── features/
-│       └── worklog.md         # Per-feature docs
-└── worklog/                   # Chrome extension: pomodoro + worklog
+│       ├── worklog.md         # Per-feature docs
+│       └── markdown-preview.md
+├── worklog/                   # Chrome extension: pomodoro + worklog
+└── markdown-preview/          # Chrome extension: live Markdown preview
 ```
 
 ## Conventions
@@ -30,3 +32,4 @@ free-repo/
 | Feature | Folder | Doc |
 | --- | --- | --- |
 | Worklog Pomodoro | [`worklog/`](../worklog/) | [`features/worklog.md`](./features/worklog.md) |
+| Markdown Preview | [`markdown-preview/`](../markdown-preview/) | [`features/markdown-preview.md`](./features/markdown-preview.md) |
