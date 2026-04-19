@@ -33,9 +33,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           return;
         }
         const endTime = Date.now() + minutes * 60 * 1000;
+        const title = typeof msg.title === "string" ? msg.title.trim() : "";
         await chrome.alarms.clear(ALARM_NAME);
         await chrome.alarms.create(ALARM_NAME, { when: endTime });
-        await setState({ running: true, endTime, minutes, awaitingAck: false });
+        await setState({ running: true, endTime, minutes, title, awaitingAck: false });
         sendResponse({ ok: true, endTime });
       } else if (msg?.type === "CANCEL_TIMER") {
         await chrome.alarms.clear(ALARM_NAME);

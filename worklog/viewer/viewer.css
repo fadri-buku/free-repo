@@ -170,6 +170,13 @@ h1 {
   margin-left: auto;
 }
 
+.entry-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--fg);
+}
+
 .entry-body {
   font-size: 13px;
   line-height: 1.6;

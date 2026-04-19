@@ -43,6 +43,39 @@ label {
   opacity: 0.85;
 }
 
+.optional {
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--track);
+  border-radius: 6px;
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 80, 60, 0.2);
+}
+
+.session-title {
+  font-size: 12px;
+  text-align: center;
+  opacity: 0.75;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+  padding: 0 4px;
+}
+
 .presets {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

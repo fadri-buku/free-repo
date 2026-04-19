@@ -3,7 +3,6 @@ import { loadFileHandle } from "../lib/file-handle-store.js";
 const $ = (id) => document.getElementById(id);
 const RING_CIRC = 2 * Math.PI * 54;
 let tickTimer = null;
-let currentTotalMs = null;
 
 function show(section) {
   for (const id of ["idle", "running", "awaiting"]) {
@@ -33,15 +32,11 @@ function setRingProgress(remaining, total) {
 
 function startTick(endTime, totalMs) {
   stopTick();
-  currentTotalMs = totalMs;
   const update = () => {
     const remaining = endTime - Date.now();
     $("remaining").textContent = formatRemaining(remaining);
     setRingProgress(remaining, totalMs);
-    if (remaining <= 0) {
-      stopTick();
-      render();
-    }
+    if (remaining <= 0) { stopTick(); render(); }
   };
   update();
   tickTimer = setInterval(update, 500);
@@ -63,7 +58,8 @@ async function startWith(minutes) {
     showError("Pick a worklog file in settings first.");
     return;
   }
-  const res = await chrome.runtime.sendMessage({ type: "START_TIMER", minutes });
+  const title = $("title").value.trim();
+  const res = await chrome.runtime.sendMessage({ type: "START_TIMER", minutes, title });
   if (!res?.ok) {
     showError(res?.error || "Failed to start timer.");
     return;
@@ -81,6 +77,9 @@ async function render() {
   if (state?.running && state.endTime && state.endTime > Date.now()) {
     const totalMs = (state.minutes || 25) * 60 * 1000;
     $("running-total").textContent = `of ${state.minutes}m`;
+    const titleEl = $("running-title");
+    titleEl.textContent = state.title || "";
+    titleEl.hidden = !state.title;
     show("running");
     startTick(state.endTime, totalMs);
     return;
@@ -128,8 +127,7 @@ $("open-locked").addEventListener("click", async () => {
 
 $("view-link").addEventListener("click", (e) => {
   e.preventDefault();
-  const url = chrome.runtime.getURL("viewer/viewer.html");
-  chrome.tabs.create({ url });
+  chrome.tabs.create({ url: chrome.runtime.getURL("viewer/viewer.html") });
   window.close();
 });
 

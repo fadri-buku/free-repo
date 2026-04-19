@@ -12,6 +12,9 @@
     </header>
 
     <section id="idle" hidden>
+      <label for="title">What are you working on? <span class="optional">(optional)</span></label>
+      <input id="title" type="text" placeholder="e.g. Review PR #42, write docs…" maxlength="120" />
+
       <div class="presets" role="group" aria-label="Duration presets">
         <button class="preset" data-minutes="15">15m</button>
         <button class="preset" data-minutes="25">25m</button>
@@ -33,6 +36,7 @@
     </section>
 
     <section id="running" hidden>
+      <p id="running-title" class="session-title"></p>
       <div class="ring-wrap">
         <svg class="ring" viewBox="0 0 120 120" width="160" height="160" aria-hidden="true">
           <circle class="ring-track" cx="60" cy="60" r="54" fill="none" stroke-width="8" />

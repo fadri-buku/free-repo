@@ -9,26 +9,23 @@ let currentHandle = null;
 
 function parseEntries(raw) {
   const entries = [];
-  // Each entry starts with a ## header: "## ISO_TIMESTAMP (Nm)" or "## ISO_TIMESTAMP"
-  const sectionRe = /^## (.+?)(?:\s+\((\d+m)\))?\s*$/gm;
+  // Header format: "## ISO_TIMESTAMP (Nm) — Title" (duration and title optional)
+  const sectionRe = /^## (.+?)(?:\s+\((\d+m)\))?(?:\s+—\s+(.+))?\s*$/gm;
   let match;
   while ((match = sectionRe.exec(raw)) !== null) {
-    const headerStart = match.index;
-    const bodyStart = headerStart + match[0].length + 1; // skip newline
-    const nextMatch = sectionRe.lastIndex;
-    // Find where the next header begins (or end of string)
+    const bodyStart = match.index + match[0].length + 1;
     const nextHeaderIdx = raw.indexOf("\n## ", bodyStart);
     const bodyEnd = nextHeaderIdx === -1 ? raw.length : nextHeaderIdx;
     const body = raw.slice(bodyStart, bodyEnd).trim();
     entries.push({
-      raw: match[1].trim(),
+      rawDate: match[1].trim(),
       duration: match[2] || null,
+      title: match[3] ? match[3].trim() : null,
       body,
       date: parseDate(match[1].trim())
     });
-    sectionRe.lastIndex = nextMatch;
+    sectionRe.lastIndex = match.index + match[0].length;
   }
-  // Most recent first
   entries.sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
   return entries;
 }
@@ -101,6 +98,7 @@ function render(query = "") {
           ${e.duration ? `<span class="entry-duration">${e.duration}</span>` : ""}
           <span class="entry-number">#${allEntries.length - allEntries.indexOf(e)}</span>
         </div>
+        ${e.title ? `<div class="entry-title">${highlight(e.title, q)}</div>` : ""}
         <div class="entry-body">${highlight(e.body, q)}</div>`;
       list.appendChild(li);
     }

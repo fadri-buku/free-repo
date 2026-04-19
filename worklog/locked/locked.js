@@ -97,6 +97,14 @@ async function init() {
     document.removeEventListener("click", onClick);
   }, { once: true });
 
+  const state = await chrome.runtime.sendMessage({ type: "GET_STATE" }).catch(() => null);
+  if (state?.title) {
+    const el = $("session-title");
+    el.textContent = state.title;
+    el.hidden = false;
+    $("entry").placeholder = `What did you accomplish on "${state.title}"?`;
+  }
+
   const handle = await loadFileHandle().catch(() => null);
   $("file-info").textContent = handle
     ? `Will append to: ${handle.name}`
@@ -133,8 +141,9 @@ $("save").addEventListener("click", async () => {
 
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
   const when = new Date().toISOString();
-  const duration = state?.minutes ? `${state.minutes}m` : "";
-  const header = duration ? `## ${when} (${duration})` : `## ${when}`;
+  const duration = state?.minutes ? `(${state.minutes}m)` : "";
+  const titlePart = state?.title ? ` — ${state.title}` : "";
+  const header = `## ${when}${duration ? ` ${duration}` : ""}${titlePart}`;
   const entry = `${header}\n${text}\n`;
 
   try {
