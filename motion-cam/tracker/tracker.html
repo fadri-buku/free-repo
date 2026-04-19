@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Motion Cam — Tracker</title>
+    <link rel="stylesheet" href="tracker.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Motion Cam</h1>
+      <div class="controls">
+        <button id="toggle">Start camera</button>
+        <label>
+          Sensitivity
+          <input id="sensitivity" type="range" min="1" max="100" value="40" />
+          <span id="sensitivity-val">40</span>
+        </label>
+        <span id="status" class="status">idle</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="stage">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+      </div>
+
+      <aside>
+        <h2>Motion</h2>
+        <div class="meter">
+          <div id="meter-fill"></div>
+          <div id="meter-threshold"></div>
+        </div>
+
+        <h2>Events</h2>
+        <p class="hint">
+          Logged when motion exceeds the threshold. Last 50 kept.
+          <button id="clear" class="link">Clear</button>
+        </p>
+        <ol id="log"></ol>
+      </aside>
+    </main>
+
+    <script src="tracker.js" type="module"></script>
+  </body>
+</html>

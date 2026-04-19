@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Motion Cam",
+  "version": "1.0.0",
+  "description": "Webcam movement tracker. Highlights motion in the camera feed and logs timestamped motion events.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Motion Cam"
+  }
+}

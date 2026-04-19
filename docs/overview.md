@@ -12,8 +12,10 @@ free-repo/
 ├── docs/
 │   ├── overview.md            # This file
 │   └── features/
-│       └── worklog.md         # Per-feature docs
-└── worklog/                   # Chrome extension: pomodoro + worklog
+│       ├── worklog.md         # Per-feature docs
+│       └── motion-cam.md
+├── worklog/                   # Chrome extension: pomodoro + worklog
+└── motion-cam/                # Chrome extension: webcam motion tracker
 ```
 
 ## Conventions
@@ -30,3 +32,4 @@ free-repo/
 | Feature | Folder | Doc |
 | --- | --- | --- |
 | Worklog Pomodoro | [`worklog/`](../worklog/) | [`features/worklog.md`](./features/worklog.md) |
+| Motion Cam | [`motion-cam/`](../motion-cam/) | [`features/motion-cam.md`](./features/motion-cam.md) |

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Motion Cam</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h1>Motion Cam</h1>
+    <p class="hint">
+      Open the tracker in a tab. The first time, your browser will ask for
+      camera permission for this extension.
+    </p>
+    <button id="open">Open tracker</button>
+
+    <label class="slider">
+      Sensitivity
+      <input id="sensitivity" type="range" min="1" max="100" value="40" />
+      <span id="sensitivity-val">40</span>
+    </label>
+
+    <p class="hint">
+      Higher = more sensitive (triggers on smaller motion).
+    </p>
+
+    <p class="events">
+      <span id="event-count">0</span> motion events recorded.
+      <button id="clear" class="link">Clear</button>
+    </p>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

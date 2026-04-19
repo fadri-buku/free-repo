@@ -9,6 +9,9 @@ top-level folder and is documented under [`docs/`](./docs/overview.md).
   countdown timer that locks Chrome when time's up and appends a free-text
   worklog entry to a file you choose.
   See [`docs/features/worklog.md`](./docs/features/worklog.md).
+- **[Motion Cam](./motion-cam/)** — Chrome extension that uses your webcam
+  to detect and log motion, with a live overlay and event log.
+  See [`docs/features/motion-cam.md`](./docs/features/motion-cam.md).
 
 ## Docs
 
