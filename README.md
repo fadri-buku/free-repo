@@ -7,7 +7,8 @@ top-level folder and is documented under [`docs/`](./docs/overview.md).
 
 - **[Worklog Pomodoro](./worklog/)** — Chrome extension with a pomodoro-style
   countdown timer that locks Chrome when time's up and appends a free-text
-  worklog entry to a file you choose.
+  worklog entry to a file you choose. Supports a **Silent mode** that keeps
+  the countdown and lock screen but suppresses alarm sound and notifications.
   See [`docs/features/worklog.md`](./docs/features/worklog.md).
 
 ## Docs

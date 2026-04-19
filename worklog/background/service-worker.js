@@ -55,7 +55,7 @@ async function clearAll() {
   ]);
 }
 
-async function armBreak(cycles) {
+async function armBreak(cycles, silent = false) {
   const isLong    = cycles % 4 === 0;
   const minutes   = isLong ? 15 : 5;
   const endTime   = Date.now() + minutes * 60 * 1000;
@@ -65,18 +65,21 @@ async function armBreak(cycles) {
     running: true, paused: false,
     phase: isLong ? "long-break" : "break",
     endTime, minutes, title: "",
-    remainingMs: null, awaitingAck: false, lockedTabId: null
+    remainingMs: null, awaitingAck: false, lockedTabId: null,
+    silent
   });
   updateBadge(next);
-  try {
-    await chrome.notifications.create("worklog-break-start", {
-      type: "basic",
-      iconUrl: chrome.runtime.getURL("icons/icon128.png"),
-      title: isLong ? "Long break — 15 min" : "Short break — 5 min",
-      message: "Step away, stretch. Break timer is running.",
-      priority: 1
-    });
-  } catch {}
+  if (!silent) {
+    try {
+      await chrome.notifications.create("worklog-break-start", {
+        type: "basic",
+        iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+        title: isLong ? "Long break — 15 min" : "Short break — 5 min",
+        message: "Step away, stretch. Break timer is running.",
+        priority: 1
+      });
+    } catch {}
+  }
 }
 
 async function openLockedTab() {
@@ -103,12 +106,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           await clearAll();
           const endTime = Date.now() + minutes * 60 * 1000;
           const title   = typeof msg.title === "string" ? msg.title.trim() : "";
+          const silent  = !!msg.silent;
           await chrome.alarms.create(WORK_ALARM, { when: endTime });
           await chrome.alarms.create(BADGE_ALARM, { periodInMinutes: 1 });
           const next = await setState({
             running: true, paused: false, phase: "work",
             endTime, minutes, title, remainingMs: null,
-            awaitingAck: false, lockedTabId: null
+            awaitingAck: false, lockedTabId: null,
+            silent
           });
           updateBadge(next);
           sendResponse({ ok: true, endTime });
@@ -145,7 +150,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           await clearAll();
           const next = await setState({
             running: false, paused: false, phase: null,
-            endTime: null, remainingMs: null, awaitingAck: false
+            endTime: null, remainingMs: null, awaitingAck: false,
+            silent: false
           });
           updateBadge(next);
           sendResponse({ ok: true });
@@ -160,6 +166,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         }
 
         case "ACKNOWLEDGED": {
+          const prev = await getState();
+          const silent = !!prev.silent;
           await clearAll();
           const cycles = await incrementCycles();
           const next   = await setState({
@@ -167,7 +175,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             endTime: null, remainingMs: null, awaitingAck: false, lockedTabId: null
           });
           updateBadge(next);
-          await armBreak(cycles);
+          await armBreak(cycles, silent);
           sendResponse({ ok: true, cycles });
           break;
         }
@@ -189,32 +197,37 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     await clearAll();
     const next = await setState({ running: false, paused: false, awaitingAck: true });
     updateBadge(next);
-    try {
-      await chrome.notifications.create("worklog-end", {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL("icons/icon128.png"),
-        title: "Work session finished",
-        message: "Time to log what you worked on.",
-        priority: 2,
-        requireInteraction: true
-      });
-    } catch {}
+    if (!next.silent) {
+      try {
+        await chrome.notifications.create("worklog-end", {
+          type: "basic",
+          iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+          title: "Work session finished",
+          message: "Time to log what you worked on.",
+          priority: 2,
+          requireInteraction: true
+        });
+      } catch {}
+    }
     await openLockedTab();
 
   } else if (alarm.name === BREAK_ALARM) {
+    const prev = await getState();
     await clearAll();
     const next = await setState({ running: false, paused: false, phase: null });
     updateBadge(next);
-    try {
-      await chrome.notifications.create("worklog-break-end", {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL("icons/icon128.png"),
-        title: "Break's over!",
-        message: "Ready for your next focus session?",
-        priority: 2,
-        requireInteraction: true
-      });
-    } catch {}
+    if (!prev.silent) {
+      try {
+        await chrome.notifications.create("worklog-break-end", {
+          type: "basic",
+          iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+          title: "Break's over!",
+          message: "Ready for your next focus session?",
+          priority: 2,
+          requireInteraction: true
+        });
+      } catch {}
+    }
 
   } else if (alarm.name === BADGE_ALARM) {
     updateBadge(await getState());

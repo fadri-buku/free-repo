@@ -89,14 +89,24 @@ function showError(msg) {
 
 async function init() {
   flashTitle();
-  await startAlarm();
-
-  document.addEventListener("click", async function onClick() {
-    if (audio.paused && !fallbackTimer) await startAlarm();
-    document.removeEventListener("click", onClick);
-  }, { once: true });
 
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" }).catch(() => null);
+  const silent = !!state?.silent;
+
+  if (silent) {
+    document.body.classList.add("silent");
+    indicator.classList.add("muted");
+    $("mute").hidden = true;
+    $("volume").closest(".volume").hidden = true;
+    $("silent-note").hidden = false;
+  } else {
+    await startAlarm();
+    document.addEventListener("click", async function onClick() {
+      if (audio.paused && !fallbackTimer) await startAlarm();
+      document.removeEventListener("click", onClick);
+    }, { once: true });
+  }
+
   if (state?.title) {
     const el = $("session-title");
     el.textContent = state.title;

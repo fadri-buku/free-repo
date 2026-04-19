@@ -148,6 +148,17 @@ textarea:focus {
   margin: 14px 0 0;
 }
 
+.silent-note {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 0;
+}
+
+body.silent .curtain {
+  background: radial-gradient(circle at 50% 20%, #2a2a2a, #0d0d0d 70%);
+  animation: none;
+}
+
 .error {
   color: #ff8370;
   font-size: 13px;

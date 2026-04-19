@@ -103,6 +103,8 @@ async function render() {
     $("pause-resume").textContent = isPaused ? "Resume" : "Pause";
     $("cancel-skip").textContent  = isBreak  ? "Skip break" : "Cancel";
 
+    $("silent-badge").hidden = !state.silent;
+
     show("running");
     startTick(state);
     return;
@@ -111,6 +113,10 @@ async function render() {
   // Idle
   stopTick();
   show("idle");
+
+  // Restore silent-mode preference
+  const { worklogSilent } = await chrome.storage.local.get("worklogSilent");
+  $("silent-mode").checked = !!worklogSilent;
 
   // Cycle status hint
   const sessionInCycle = (cycles % 4) + 1;
@@ -139,8 +145,10 @@ async function startWith(minutes) {
   }
   const handle = await loadFileHandle().catch(() => null);
   if (!handle) { showError("Pick a worklog file in settings first."); return; }
-  const title = $("title").value.trim();
-  const res   = await chrome.runtime.sendMessage({ type: "START_TIMER", minutes, title });
+  const title  = $("title").value.trim();
+  const silent = $("silent-mode").checked;
+  await chrome.storage.local.set({ worklogSilent: silent });
+  const res = await chrome.runtime.sendMessage({ type: "START_TIMER", minutes, title, silent });
   if (!res?.ok) { showError(res?.error || "Failed to start timer."); return; }
   render();
 }

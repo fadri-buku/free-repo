@@ -28,6 +28,11 @@
         <button id="start" class="primary">Start</button>
       </div>
 
+      <label class="silent-row" title="Countdown still runs and the lock screen still appears, but no alarm sound or notifications.">
+        <input id="silent-mode" type="checkbox" />
+        <span>Silent mode <span class="optional">(no alarm sound)</span></span>
+      </label>
+
       <p id="cycle-status" class="muted"></p>
       <p id="file-status" class="muted"></p>
       <div class="links">
@@ -41,6 +46,7 @@
         <div id="cycle-dots" class="cycle-dots" aria-label="Completed sessions"></div>
         <p id="phase-label" class="phase-label"></p>
       </div>
+      <p id="silent-badge" class="silent-badge" hidden>Silent mode</p>
       <p id="running-title" class="session-title" hidden></p>
 
       <div class="ring-wrap">

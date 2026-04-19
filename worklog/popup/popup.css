@@ -94,6 +94,31 @@ input[type="number"]:focus {
   box-shadow: 0 0 0 3px rgba(210, 80, 60, 0.2);
 }
 
+.silent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  opacity: 0.85;
+  cursor: pointer;
+}
+.silent-row input[type="checkbox"] { margin: 0; accent-color: var(--accent); }
+
+.silent-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  margin: 2px 0 0;
+  padding: 2px 8px;
+  border-radius: 10px;
+  align-self: center;
+  display: inline-block;
+  background: rgba(127, 127, 127, 0.15);
+  opacity: 0.75;
+}
+
 /* ── Running section ─────────────────────────────────────────────────────── */
 .session-header {
   display: flex;

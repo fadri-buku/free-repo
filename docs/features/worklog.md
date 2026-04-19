@@ -19,6 +19,11 @@ Source: [`worklog/`](../../worklog/)
      beep until you mute or acknowledge.
    - Reopens the locked tab automatically if you close it before
      acknowledging — so the worklog step can't be silently skipped.
+
+   If you started the timer with **Silent mode** ticked, the countdown still
+   runs and the locked tab still opens (and is still re-opened if closed), but
+   no alarm sound or system notifications are produced — the locked page shows
+   a calmer curtain and a "Silent mode — alarm suppressed." note instead.
 5. You type free-text into the form (notes, links, anything), hit **Save and
    acknowledge**, and the entry is appended to your worklog file with a
    timestamp header.
@@ -102,6 +107,15 @@ worklog/
   provided. If autoplay is blocked or the WAV fails to load, the page
   falls back to a Web Audio version of the same chime so there's always
   *some* audible alarm.
+- **Silent mode.** The popup's **Silent mode** checkbox sets a `silent`
+  flag on the timer state. When set, the service worker skips the work-end,
+  break-start, and break-end notifications, and the locked page skips
+  `startAlarm()` entirely (no WAV, no Web Audio fallback) and hides the
+  volume + mute controls. The countdown, badge tick, and lock-tab
+  enforcement (including re-open on close) are unchanged — only the sound
+  and OS notifications are suppressed. The checkbox state is remembered
+  across popup opens via `chrome.storage.local.worklogSilent`, and the
+  flag is preserved across the break that follows a silent work session.
 - **Entry storage.** Every acknowledged entry is primarily stored in
   `chrome.storage.local` under `worklogEntries` (an array of
   `{ timestamp, minutes, title, body }`). This is what the viewer reads,
