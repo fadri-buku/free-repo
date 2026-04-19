@@ -120,7 +120,7 @@ async function init() {
   $("gate-file").textContent = handle.name;
 
   // Try to read without asking — succeeds when permission is already held.
-  const perm = await handle.queryPermission({ mode: "readonly" }).catch(() => "denied");
+  const perm = await handle.queryPermission({ mode: "read" }).catch(() => "denied");
   if (perm === "granted") {
     await readAndRender();
     $("view").hidden = false;
@@ -138,7 +138,7 @@ $("grant-btn").addEventListener("click", async () => {
   $("gate-error").hidden = true;
   let granted;
   try {
-    granted = await handle.requestPermission({ mode: "readonly" });
+    granted = await handle.requestPermission({ mode: "read" });
   } catch (err) {
     $("gate-error").textContent = `Could not request permission: ${err?.message || err}`;
     $("gate-error").hidden = false;
