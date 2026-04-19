@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Worklog Pomodoro</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img class="logo" src="../icons/tomato.svg" alt="" />
+      <h1>Worklog Pomodoro</h1>
+    </header>
+
+    <section id="idle" hidden>
+      <label for="title">What are you working on? <span class="optional">(optional)</span></label>
+      <input id="title" type="text" placeholder="e.g. Review PR #42, write docs…" maxlength="120" />
+
+      <div class="presets" role="group" aria-label="Duration presets">
+        <button class="preset" data-minutes="15">15m</button>
+        <button class="preset" data-minutes="25">25m</button>
+        <button class="preset" data-minutes="45">45m</button>
+        <button class="preset" data-minutes="60">60m</button>
+      </div>
+
+      <label for="minutes">Custom duration (minutes)</label>
+      <div class="row">
+        <input id="minutes" type="number" min="1" max="480" step="1" value="25" />
+        <button id="start" class="primary">Start</button>
+      </div>
+
+      <p id="cycle-status" class="muted"></p>
+      <p id="file-status" class="muted"></p>
+      <div class="links">
+        <a id="view-link" href="#">View worklog</a>
+        <a id="options-link" href="#">Settings</a>
+      </div>
+    </section>
+
+    <section id="running" hidden>
+      <div id="session-header" class="session-header">
+        <div id="cycle-dots" class="cycle-dots" aria-label="Completed sessions"></div>
+        <p id="phase-label" class="phase-label"></p>
+      </div>
+      <p id="running-title" class="session-title" hidden></p>
+
+      <div class="ring-wrap">
+        <svg id="ring-svg" class="ring" viewBox="0 0 120 120" width="150" height="150" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="54" fill="none" stroke-width="8" />
+          <circle id="ring-progress" class="ring-progress" cx="60" cy="60" r="54"
+            fill="none" stroke-width="8" stroke-linecap="round"
+            transform="rotate(-90 60 60)" />
+        </svg>
+        <div class="ring-label">
+          <p id="remaining" class="big">--:--</p>
+          <p id="running-total" class="muted-inline"></p>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="pause-resume" class="secondary">Pause</button>
+        <button id="cancel-skip" class="secondary">Cancel</button>
+      </div>
+    </section>
+
+    <section id="awaiting" hidden>
+      <p class="awaiting-text">⏰ Timer finished. Acknowledge your worklog to continue.</p>
+      <button id="open-locked" class="primary">Open worklog</button>
+    </section>
+
+    <p id="error" class="error" hidden></p>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

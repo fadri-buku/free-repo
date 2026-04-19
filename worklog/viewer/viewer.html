@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Worklog</title>
+    <link rel="stylesheet" href="viewer.css" />
+  </head>
+  <body>
+    <!-- Shown when file has been read and entries are visible -->
+    <div id="view">
+      <header>
+        <img class="logo" src="../icons/tomato.svg" alt="" />
+        <div class="header-text">
+          <h1>Worklog</h1>
+          <p id="file-name" class="file-name"></p>
+        </div>
+        <div class="header-actions">
+          <button id="refresh" class="icon-btn" title="Reload from file">↻</button>
+          <button id="export" class="ghost" title="Download a copy of the worklog file">Export .md</button>
+          <button id="open-settings" class="ghost">Settings</button>
+        </div>
+      </header>
+
+      <div id="toolbar">
+        <input id="search" type="search" placeholder="Search entries…" />
+        <p id="count" class="count"></p>
+      </div>
+
+      <div id="state-empty" class="state" hidden>
+        <p>No entries yet.</p>
+        <p class="state-hint">Complete a timer session to add the first one.</p>
+      </div>
+
+      <div id="state-no-match" class="state" hidden>
+        <p>No entries match your search.</p>
+      </div>
+
+      <ol id="entries" class="entries"></ol>
+    </div>
+
+    <!-- Shown when we need a user gesture to request file permission -->
+    <div id="gate" hidden>
+      <div class="gate-card">
+        <img class="logo gate-logo" src="../icons/tomato.svg" alt="" />
+        <h2>Open your worklog</h2>
+        <p id="gate-file" class="gate-file"></p>
+        <p class="gate-hint">
+          Chrome requires one click to grant read access to your file.
+          This is a one-time confirmation per browser session.
+        </p>
+        <button id="grant-btn">Open worklog</button>
+        <p id="gate-error" class="gate-error" hidden></p>
+        <button id="gate-settings" class="ghost small">Change file in Settings</button>
+      </div>
+    </div>
+
+    <!-- Shown when no file is configured at all -->
+    <div id="no-file" hidden>
+      <div class="gate-card">
+        <img class="logo gate-logo" src="../icons/tomato.svg" alt="" />
+        <h2>No worklog file set</h2>
+        <p class="gate-hint">
+          Configure a file in Settings to start tracking your work sessions.
+        </p>
+        <button id="go-settings">Open Settings</button>
+      </div>
+    </div>
+
+    <script type="module" src="viewer.js"></script>
+  </body>
+</html>

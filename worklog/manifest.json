@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Worklog Pomodoro",
+  "version": "1.0.0",
+  "description": "Pomodoro-style countdown timer that locks Chrome until you record a worklog entry to a file you choose.",
+  "permissions": ["alarms", "notifications", "storage", "tabs"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Worklog Pomodoro",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_page": "options/options.html"
+}

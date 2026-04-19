@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Worklog — time's up</title>
+    <link rel="stylesheet" href="locked.css" />
+  </head>
+  <body>
+    <div class="curtain">
+      <div class="card">
+        <div class="header">
+          <div class="alarm-indicator" id="alarm-indicator" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="header-text">
+            <h1>Time's up</h1>
+            <p id="session-title" class="session-title" hidden></p>
+            <p class="subtitle">What did you work on? Paste links, notes, anything.</p>
+          </div>
+        </div>
+
+        <textarea id="entry" rows="10" autofocus
+          placeholder="e.g. Reviewed PR #42, drafted design doc, https://..."></textarea>
+
+        <div class="alarm-controls">
+          <button id="mute" class="ghost" title="Stop alarm sound">
+            <span id="mute-label">Mute alarm</span>
+          </button>
+          <label class="volume" title="Alarm volume">
+            <span aria-hidden="true">🔊</span>
+            <input id="volume" type="range" min="0" max="100" value="70" />
+          </label>
+        </div>
+
+        <p id="file-info" class="muted"></p>
+        <p id="error" class="error" hidden></p>
+
+        <div class="actions">
+          <button id="save">Save and acknowledge</button>
+        </div>
+      </div>
+    </div>
+
+    <audio id="alarm-audio" src="../assets/alarm.wav" loop preload="auto"></audio>
+    <script type="module" src="locked.js"></script>
+  </body>
+</html>

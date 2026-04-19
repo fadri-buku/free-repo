@@ -1,0 +1,160 @@
+# Worklog Pomodoro
+
+A Manifest V3 Chrome extension that combines a pomodoro-style countdown timer
+with a forced "what did you just do?" worklog entry written to a file of your
+choice.
+
+Source: [`worklog/`](../../worklog/)
+
+## What it does
+
+1. You pick a worklog file once in the extension's options (Markdown or text).
+2. You open the extension popup and start a timer either via a preset chip
+   (15 / 25 / 45 / 60 min) or by typing a custom duration and hitting
+   **Start**. While it's running the popup shows a circular progress ring.
+3. The timer runs in the background even if you close the popup.
+4. When the timer ends, the extension:
+   - Fires a system notification that requires interaction.
+   - Opens a dedicated "locked" tab with a red alarm curtain and a looping
+     beep until you mute or acknowledge.
+   - Reopens the locked tab automatically if you close it before
+     acknowledging — so the worklog step can't be silently skipped.
+5. You type free-text into the form (notes, links, anything), hit **Save and
+   acknowledge**, and the entry is appended to your worklog file with a
+   timestamp header.
+
+## Install (unpacked)
+
+1. Open `chrome://extensions` in Chrome (or any Chromium browser that supports
+   Manifest V3 and the File System Access API).
+2. Enable **Developer mode** (top-right toggle).
+3. Click **Load unpacked** and select the [`worklog/`](../../worklog/) folder.
+4. Pin the extension to the toolbar so the popup is easy to reach.
+
+## First-run setup
+
+Open the extension's **Options** page (right-click the toolbar icon → Options)
+and either:
+
+- **Choose file…** — point at an existing `.md`/`.txt`/`.log` file you already
+  keep a worklog in.
+- **Create new file…** — picks a new file via the save dialog (defaults to
+  `worklog.md`).
+
+Chrome will ask you to grant read/write access to the file. This is a browser
+security prompt, not something the extension can skip.
+
+## Daily use
+
+- Click the toolbar icon.
+- Enter a duration (default is 25 minutes).
+- Click **Start**.
+- Go do the work. You can close the popup; the timer runs in the background
+  service worker.
+- When the alarm fires, fill in the worklog form and hit **Save and
+  acknowledge**.
+
+Worklog entries are appended in this format:
+
+```
+## 2026-04-19T14:32:11.204Z (25m)
+Reviewed PR #42, drafted design doc, https://example.com/notes
+```
+
+## Folder layout
+
+```
+worklog/
+├── manifest.json               # MV3 manifest
+├── background/
+│   └── service-worker.js       # chrome.alarms timer + lock-tab + notification logic
+├── popup/                      # Toolbar popup: duration input, live countdown
+│   ├── popup.html
+│   ├── popup.css
+│   └── popup.js
+├── locked/                     # Full-screen lock page with alarm + worklog form
+│   ├── locked.html
+│   ├── locked.css
+│   └── locked.js
+├── options/                    # Settings page: worklog file + alarm preview
+│   ├── options.html
+│   ├── options.css
+│   └── options.js
+├── lib/
+│   └── file-handle-store.js    # IndexedDB persistence + permission + append helpers
+├── assets/
+│   └── alarm.wav               # Bundled default alarm sound (looped on locked page)
+└── icons/                      # 16/48/128 PNG icons
+```
+
+## How it works
+
+- **Timer.** `chrome.alarms.create({ when: endTime })` fires once at the
+  target time. Works while the service worker is asleep — Chrome wakes it.
+- **Lock.** On alarm, the service worker creates an interaction-required
+  notification and opens `locked/locked.html` in a new focused tab. A
+  `chrome.tabs.onRemoved` listener reopens the locked tab if it is closed
+  before the user acknowledges.
+- **Alarm sound.** The locked page plays a bundled default alarm
+  ([`worklog/assets/alarm.wav`](../../worklog/assets/alarm.wav), a soft
+  ~2.5s C-major triad chime — C5 → E5 → G5 with bell-like decay) via an
+  `<audio loop>` element. A volume slider and **Mute alarm** button are
+  provided. If autoplay is blocked or the WAV fails to load, the page
+  falls back to a Web Audio version of the same chime so there's always
+  *some* audible alarm.
+- **Entry storage.** Every acknowledged entry is primarily stored in
+  `chrome.storage.local` under `worklogEntries` (an array of
+  `{ timestamp, minutes, title, body }`). This is what the viewer reads,
+  so opening the viewer never prompts for file permission.
+- **File writes.** If a worklog file is configured, the locked page also
+  appends the same entry to it as Markdown (`## ISO (Nm) — Title\nbody`) on
+  a best-effort basis. The handle is persisted as a `FileSystemFileHandle`
+  in IndexedDB; if permission is denied or the write fails, the entry is
+  still kept in `chrome.storage.local`.
+- **Viewer.** `worklog/viewer/` reads `chrome.storage.local` directly —
+  no file permission, no setup. It supports live search, an **Import**
+  button that reads an existing worklog `.md`/`.txt` file via the File
+  System Access API and merges unseen entries into storage, and an
+  **Export** button that downloads all stored entries as a Markdown file
+  via a `Blob` + `<a download>`.
+
+## Permissions
+
+From [`worklog/manifest.json`](../../worklog/manifest.json):
+
+| Permission | Why |
+| --- | --- |
+| `alarms` | Fire a single alarm at the end of the countdown. |
+| `notifications` | Show the "time's up" notification. |
+| `storage` | Persist timer state (running, endTime, awaitingAck) in `chrome.storage.local`. |
+| `tabs` | Open and focus the locked tab; detect when it's closed. |
+
+The File System Access API (`showOpenFilePicker`, `showSaveFilePicker`, and
+the handle permission flow) does not require an extension permission — it
+uses per-file user consent instead.
+
+## Caveats and known limits
+
+- **File re-grant after restart.** File System Access handles survive restart
+  in IndexedDB, but Chrome will ask the user to re-confirm access the first
+  time the extension tries to write after the browser restarts. The options
+  page and the locked page both handle this by calling `requestPermission`.
+- **Append is read-then-write.** `FileSystemWritableFileStream` has no append
+  mode, so each save reads the full file and writes it back. This is fine for
+  worklog-sized text files; if a file grows very large (hundreds of MB) this
+  will get slow.
+- **Lock scope.** The current lock is a single focused tab that reopens if
+  closed. It does not overlay every other open tab — the user can still
+  switch tabs while the alarm is playing. If you want a stricter all-tabs
+  overlay, that's a different content-script-driven approach and a host
+  permission on `<all_urls>`.
+- **Autoplay.** Most Chromium builds allow autoplay on extension pages, so
+  the alarm beep starts automatically. If a build blocks it, the first click
+  on the page (mute or save) will resume the AudioContext.
+
+## Not included
+
+- No build step, bundler, or TypeScript — the extension is plain JS modules.
+- No tests. The feature is small enough to validate by loading it and
+  running through the flow once.
+- No published store listing; this is a load-unpacked developer extension.
