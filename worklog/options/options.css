@@ -4,20 +4,39 @@
 
   --accent: #d2503c;
   --accent-hover: #c0442f;
-  --track: rgba(127, 127, 127, 0.3);
+
+  --bg: #f4f4f4;
+  --fg: #111;
+  --card-bg: #ffffff;
+  --card-border: #e4e4e4;
+  --muted: #555;
+  --hint: #777;
+  --field-bg: #f0f0f0;
+  --field-border: #d0d0d0;
+  --track: rgba(0, 0, 0, 0.18);
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --fg: #ededed;
+    --card-bg: #1d1d1d;
+    --card-border: #2e2e2e;
+    --muted: #b5b5b5;
+    --hint: #8a8a8a;
+    --field-bg: #262626;
+    --field-border: #3a3a3a;
+    --track: rgba(255, 255, 255, 0.25);
+  }
+}
+
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   padding: 40px 24px;
-  background: #f7f7f7;
-  color: #111;
-}
-
-@media (prefers-color-scheme: dark) {
-  body { background: #141414; color: #f0f0f0; }
-  section { background: #1f1f1f; border-color: #2d2d2d; }
-  .current { background: rgba(255, 255, 255, 0.04); }
+  background: var(--bg);
+  color: var(--fg);
 }
 
 main {
@@ -47,8 +66,8 @@ h1 {
 }
 
 section {
-  background: white;
-  border: 1px solid #e4e4e4;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 10px;
   padding: 22px 26px;
   margin-bottom: 16px;
@@ -62,19 +81,28 @@ h2 {
 
 .muted {
   font-size: 13px;
-  opacity: 0.75;
+  color: var(--muted);
   margin: 0 0 14px;
   line-height: 1.5;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--hint);
+  margin: 10px 0 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
 }
 
 .current {
   font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: 13px;
   padding: 10px 12px;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
   border-radius: 6px;
   word-break: break-all;
   margin: 0;
+  color: var(--fg);
 }
 
 .actions {
@@ -98,6 +126,36 @@ h2 {
   accent-color: var(--accent);
 }
 
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+input[type="text"], select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+}
+
+input[type="text"]:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 80, 60, 0.25);
+}
+
 button {
   font: inherit;
   font-size: 14px;
@@ -116,11 +174,11 @@ button:active:not(:disabled) { transform: translateY(1px); }
 button.ghost {
   background: transparent;
   border: 1px solid var(--track);
-  color: inherit;
+  color: var(--fg);
 }
 
 button.ghost:hover:not(:disabled) {
-  background: rgba(127, 127, 127, 0.08);
+  background: rgba(127, 127, 127, 0.12);
 }
 
 button.danger {

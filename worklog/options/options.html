@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Worklog Pomodoro \u2014 Settings</title>
+    <title>Worklog Pomodoro — Settings</title>
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
@@ -15,18 +15,43 @@
       <section>
         <h2>Worklog file</h2>
         <p class="muted">
-          Pick the file where each worklog entry will be appended. The browser will ask you
-          to grant read/write access. You may be asked to re-confirm access the first time
-          after restarting Chrome.
+          Pick the file where each worklog entry will be appended. The browser will ask
+          you to grant read/write access. You may be asked to re-confirm access the first
+          time after restarting Chrome.
         </p>
         <p id="current" class="current">No file selected.</p>
         <div class="actions">
-          <button id="pick">Choose file\u2026</button>
-          <button id="pick-new" class="ghost">Create new file\u2026</button>
+          <button id="pick">Choose file…</button>
+          <button id="pick-new" class="ghost">Create new file…</button>
+          <button id="use-default">Use default</button>
           <button id="clear" class="ghost danger">Clear</button>
         </div>
         <p id="error" class="error" hidden></p>
         <p id="success" class="success" hidden></p>
+      </section>
+
+      <section>
+        <h2>Default path &amp; filename</h2>
+        <p class="muted">
+          Used by <strong>Use default</strong> above and pre-filled in the
+          <strong>Create new file…</strong> dialog. The folder is limited to a well-known
+          location Chrome can start the picker in — the filename is free-form.
+        </p>
+        <div class="grid-2">
+          <label>
+            Start folder
+            <select id="default-folder">
+              <option value="documents">Documents</option>
+              <option value="desktop">Desktop</option>
+              <option value="downloads">Downloads</option>
+            </select>
+          </label>
+          <label>
+            Filename
+            <input id="default-name" type="text" value="worklog.md" placeholder="worklog.md" />
+          </label>
+        </div>
+        <p id="default-preview" class="hint"></p>
       </section>
 
       <section>
@@ -36,10 +61,10 @@
           locked tab when the timer ends. Use the controls below to preview it.
         </p>
         <div class="actions alarm-preview">
-          <button id="test-alarm">\u25B6 Preview</button>
+          <button id="test-alarm">▶ Preview</button>
           <button id="stop-alarm" class="ghost" disabled>Stop</button>
           <label class="volume">
-            <span aria-hidden="true">\u{1F50A}</span>
+            <span aria-hidden="true">🔊</span>
             <input id="volume" type="range" min="0" max="100" value="70" />
           </label>
         </div>

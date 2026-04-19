@@ -87,9 +87,14 @@ async function render() {
   }
   show("idle");
   const handle = await loadFileHandle().catch(() => null);
-  $("file-status").textContent = handle
-    ? `Worklog file: ${handle.name}`
-    : "No worklog file set \u2014 configure one first.";
+  if (handle) {
+    $("file-status").textContent = `Worklog file: ${handle.name}`;
+  } else {
+    const { worklogPrefs } = await chrome.storage.local.get("worklogPrefs");
+    const folder = { documents: "~/Documents", desktop: "~/Desktop", downloads: "~/Downloads" }[worklogPrefs?.folder] || "~/Documents";
+    const name = (worklogPrefs?.name || "worklog.md").trim();
+    $("file-status").textContent = `No file set — open settings to use default: ${folder}/${name}`;
+  }
 }
 
 for (const btn of document.querySelectorAll(".preset")) {
