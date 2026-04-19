@@ -117,23 +117,26 @@ flowchart LR
 ```
 </pre>
 
-### Install the libraries (one-time)
+### Install the libraries (one-time, per clone)
 
-The rendering libraries are not checked into git — they're large and
-vendoring them would bloat the repo. Drop them into
-[`markdown-preview/lib/vendor/`](../../markdown-preview/lib/vendor/) once:
+The rendering libraries are committed to
+[`markdown-preview/lib/vendor/`](../../markdown-preview/lib/vendor/) so any
+fresh clone of this repo renders diagrams out of the box. If you ever need
+to install or update them, run from the repo root:
 
 ```sh
 # Mermaid (flowchart, sequence, class, ER, state, gantt, pie, gitGraph…)
 curl -L \
   -o markdown-preview/lib/vendor/mermaid.esm.min.mjs \
-  https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs
+  https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs
 
 # Nomnoml (class / component diagrams)
 curl -L \
   -o markdown-preview/lib/vendor/nomnoml.js \
   https://cdn.jsdelivr.net/npm/nomnoml@1.6.2/dist/nomnoml.js
 ```
+
+Pin exact versions (not ranges) so the committed file is reproducible.
 
 See [`markdown-preview/lib/vendor/README.md`](../../markdown-preview/lib/vendor/README.md)
 for rationale, version guidance, and audit notes.
