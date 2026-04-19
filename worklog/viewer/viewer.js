@@ -95,6 +95,7 @@ function renderEntries(query = "") {
 // ── File I/O ──────────────────────────────────────────────────────────────
 
 async function readAndRender() {
+  if (!handle) return;
   try {
     const file = await handle.getFile();
     rawText = await file.text();
