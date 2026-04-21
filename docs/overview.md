@@ -12,8 +12,10 @@ free-repo/
 ├── docs/
 │   ├── overview.md            # This file
 │   └── features/
-│       └── worklog.md         # Per-feature docs
-└── worklog/                   # Chrome extension: pomodoro + worklog
+│       ├── worklog.md         # Per-feature docs
+│       └── countdown-timer.md
+├── worklog/                   # Chrome extension: pomodoro + worklog
+└── countdown-timer/           # Android app (Kotlin): countdown timer
 ```
 
 ## Conventions
@@ -30,3 +32,4 @@ free-repo/
 | Feature | Folder | Doc |
 | --- | --- | --- |
 | Worklog Pomodoro | [`worklog/`](../worklog/) | [`features/worklog.md`](./features/worklog.md) |
+| Countdown Timer (Android, Kotlin) | [`countdown-timer/`](../countdown-timer/) | [`features/countdown-timer.md`](./features/countdown-timer.md) |

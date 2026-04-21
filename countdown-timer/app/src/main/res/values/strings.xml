@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Countdown Timer</string>
+
+    <string name="hint_hours">Hours</string>
+    <string name="hint_minutes">Minutes</string>
+    <string name="hint_seconds">Seconds</string>
+
+    <string name="default_hours">0</string>
+    <string name="default_minutes">0</string>
+    <string name="default_seconds">10</string>
+    <string name="default_time">00:00:10</string>
+
+    <string name="button_start">Start</string>
+    <string name="button_pause">Pause</string>
+    <string name="button_resume">Resume</string>
+    <string name="button_reset">Reset</string>
+
+    <string name="state_idle">Ready</string>
+    <string name="state_running">Running</string>
+    <string name="state_paused">Paused</string>
+    <string name="state_finished">Finished</string>
+
+    <string name="error_zero_duration">Enter a duration greater than zero</string>
+    <string name="error_invalid_input">Enter numbers only (0–59 for minutes and seconds)</string>
+
+    <string name="notif_channel_name">Countdown Timer</string>
+    <string name="notif_channel_description">Fires when a countdown finishes</string>
+    <string name="notif_finished_title">Time is up</string>
+    <string name="notif_finished_body">Your countdown has finished.</string>
+</resources>
