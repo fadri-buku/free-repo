@@ -12,8 +12,10 @@ free-repo/
 ├── docs/
 │   ├── overview.md            # This file
 │   └── features/
-│       └── worklog.md         # Per-feature docs
-└── worklog/                   # Chrome extension: pomodoro + worklog
+│       ├── worklog.md         # Per-feature docs
+│       └── bukuagen-landing-page.md
+├── worklog/                   # Chrome extension: pomodoro + worklog
+└── bukuagen-landing-page/     # Static landing page for the Bukuagen K1 EDC
 ```
 
 ## Conventions
@@ -30,3 +32,4 @@ free-repo/
 | Feature | Folder | Doc |
 | --- | --- | --- |
 | Worklog Pomodoro | [`worklog/`](../worklog/) | [`features/worklog.md`](./features/worklog.md) |
+| Bukuagen Landing Page | [`bukuagen-landing-page/`](../bukuagen-landing-page/) | [`features/bukuagen-landing-page.md`](./features/bukuagen-landing-page.md) |
