@@ -1,0 +1,4 @@
+-keep class com.bukuwarung.paymentsadapter.data.remote.dto.** { *; }
+-keepclassmembers class com.bukuwarung.paymentsadapter.data.remote.dto.** { *; }
+-keep class com.squareup.moshi.** { *; }
+-keepclasseswithmembers class * { @com.squareup.moshi.* <methods>; }
