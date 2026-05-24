@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.home.HomeFragment"
+        android:label="Payments Adapter"
+        tools:layout="@layout/fragment_home">
+        <action android:id="@+id/action_home_to_auth" app:destination="@id/authFragment" />
+        <action android:id="@+id/action_home_to_accountInquiry" app:destination="@id/accountInquiryFragment" />
+        <action android:id="@+id/action_home_to_createPayment" app:destination="@id/createPaymentFragment" />
+        <action android:id="@+id/action_home_to_admin" app:destination="@id/adminFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/authFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.auth.AuthFragment"
+        android:label="Authentication"
+        tools:layout="@layout/fragment_auth" />
+
+    <fragment
+        android:id="@+id/accountInquiryFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.disbursement.AccountInquiryFragment"
+        android:label="Account Inquiry"
+        tools:layout="@layout/fragment_account_inquiry">
+        <action
+            android:id="@+id/action_accountInquiry_to_createDisbursement"
+            app:destination="@id/createDisbursementFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createDisbursementFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.disbursement.CreateDisbursementFragment"
+        android:label="Create Disbursement"
+        tools:layout="@layout/fragment_create_disbursement">
+        <argument android:name="beneficiaryAccountNo" app:argType="string" android:defaultValue="" />
+        <argument android:name="beneficiaryBankCode" app:argType="string" android:defaultValue="" />
+        <argument android:name="sourceAccountNo" app:argType="string" android:defaultValue="" />
+        <argument android:name="inquiryKey" app:argType="string" android:defaultValue="" />
+        <action
+            android:id="@+id/action_createDisbursement_to_status"
+            app:destination="@id/disbursementStatusFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/disbursementStatusFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.disbursement.DisbursementStatusFragment"
+        android:label="Disbursement Status"
+        tools:layout="@layout/fragment_disbursement_status">
+        <argument android:name="referenceNo" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createPaymentFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.payment.CreatePaymentFragment"
+        android:label="Create Payment"
+        tools:layout="@layout/fragment_create_payment">
+        <action
+            android:id="@+id/action_createPayment_to_status"
+            app:destination="@id/paymentStatusFragment" />
+        <action
+            android:id="@+id/action_createPayment_to_cancel"
+            app:destination="@id/cancelPaymentFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/paymentStatusFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.payment.PaymentStatusFragment"
+        android:label="Payment Status"
+        tools:layout="@layout/fragment_payment_status">
+        <argument android:name="referenceNo" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/cancelPaymentFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.payment.CancelPaymentFragment"
+        android:label="Cancel Payment"
+        tools:layout="@layout/fragment_cancel_payment">
+        <argument android:name="referenceNo" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminFragment"
+        android:name="com.bukuwarung.paymentsadapter.presentation.ui.admin.AdminFragment"
+        android:label="Admin &amp; Operations"
+        tools:layout="@layout/fragment_admin" />
+
+</navigation>
